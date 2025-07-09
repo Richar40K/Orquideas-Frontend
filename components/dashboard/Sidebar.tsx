@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { 
   Package, 
   MapPin, 
@@ -7,15 +6,7 @@ import {
   CreditCard, 
   BarChart3, 
   Settings,
-  Menu,
   X,
-  Bell,
-  Search,
-  ChevronDown,
-  TrendingUp,
-  Calendar,
-  DollarSign,
-  UserCheck
 } from 'lucide-react';
 
 
