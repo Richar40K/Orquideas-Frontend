@@ -7,7 +7,6 @@ import {
   Bus,
 } from 'lucide-react';
 
-// Componente de estadísticas
 const StatsCard = ({ 
   label, 
   value, 

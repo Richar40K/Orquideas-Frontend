@@ -2,22 +2,30 @@ import { CardPresentation } from "./CardPresentacion";
 
 
 const cardItems = [
-  {
+
+   {
     id: 1,
+    title: "Nuestras Rutas",
+    image: "/images/ruta.jpg",
+    description:
+      "Contamos con rutas que mejoraran tu experiencia",
+  }, 
+  {
+    id: 2,
     title: "Arequipa",
     image: "/images/imageCardArequipa.jpg",
     description:
       "En tu ruta por Arequipa, maravíllate con la arquitectura de sillar bajo la sombra del Misti",
   },
   {
-    id: 2,
+    id: 3,
     title: "Omate",
     image: "/images/omate.jpg",
     description:
       "En tu ruta por Omate, descubre paisajes volcánicos únicos y sumérgete en la riqueza de sus tradiciones ancestrales",
   },
   {
-    id: 3,
+    id: 4,
     title: "Quinistaquillas",
     image: "/images/Quinistaquillas.jpg",
     description:

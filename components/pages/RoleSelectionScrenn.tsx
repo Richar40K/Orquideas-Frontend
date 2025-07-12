@@ -18,9 +18,8 @@ const RoleSelectionScreen: NextPage = () => {
         </p>
       </div>
 
-      {/* Selector de Roles */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-12">
-        {/* Opción Cliente */}
+
         <div 
           className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all cursor-pointer group border-2 border-transparent hover:border-blue-500 flex flex-col items-center"
         >
@@ -37,7 +36,6 @@ const RoleSelectionScreen: NextPage = () => {
           </div>
         </div>
 
-        {/* Opción Dashboard */}
         <div 
           className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all cursor-pointer group border-2 border-transparent hover:border-purple-500 flex flex-col items-center"
         >
@@ -55,7 +53,6 @@ const RoleSelectionScreen: NextPage = () => {
         </div>
       </div>
 
-      {/* Botón Cerrar Sesión */}
       <button 
         className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors"
       >

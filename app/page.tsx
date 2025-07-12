@@ -18,7 +18,7 @@ export default function Page() {
               <Link href="#servicios" className="text-gray-700 hover:text-amber-600 transition-colors font-medium">Servicios</Link>
               <Link href="#encomiendas" className="text-gray-700 hover:text-amber-600 transition-colors font-medium">Encomiendas</Link>
               <Link href="#contacto" className="text-gray-700 hover:text-amber-600 transition-colors font-medium">Contacto</Link>
-              <Link href="#comprar" className="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors font-medium flex items-center">
+              <Link href="/autenticacion/login" className="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors font-medium flex items-center">
                 <Ticket className="mr-2 h-4 w-4" /> Comprar Pasaje
               </Link>
             </div>
@@ -42,13 +42,13 @@ export default function Page() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href="#comprar"
+                  href="/autenticacion/login"
                   className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
                 >
                   <Ticket className="mr-2 h-5 w-5" /> Comprar Pasaje
                 </Link>
                 <Link
-                  href="#encomiendas"
+                  href="/autenticacion/login"
                   className="bg-white/90 hover:bg-white text-gray-900 px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
                 >
                   <PackageCheck className="mr-2 h-5 w-5" /> Enviar Encomienda
@@ -60,6 +60,7 @@ export default function Page() {
       </section>
 
       <section
+        id='servicios'
         className="relative h-screen w-full flex items-center bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/images/arequipamod.jpg')" }}
       >
@@ -111,25 +112,37 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Rutas Section */}
-      <section id="rutas" className="py-16 bg-gray-50">
-        <CardItem />
+      <section
+        id="rutas"
+        className="relative h-screen w-full flex items-center bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/arequipamod.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/40 z-0"></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <CardItem />
+
+        </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-16 bg-amber-600 text-white">
+
+      <section
+        id='contacto'
+        className="py-16 bg-amber-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6">¿Listo para tu próximo viaje?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">Comienza hoy mismo. Reserva tus pasajes o envía tus encomiendas con nosotros.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="#comprar"
+              href="/autenticacion/login"
               className="bg-white hover:bg-gray-100 text-amber-600 px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
             >
               <Ticket className="mr-2 h-5 w-5" /> Comprar Pasaje
             </Link>
             <Link
-              href="#contacto"
+              href="https://wa.me/51992072614"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-amber-700 hover:bg-amber-800 text-white px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
             >
               <PhoneCall className="mr-2 h-5 w-5" /> Contactar Ahora
@@ -138,7 +151,6 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

@@ -1,5 +1,4 @@
-    'use client';
-
+'use client';
 import React, { useState } from 'react';
 import { User, Lock, Bus, Package, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
