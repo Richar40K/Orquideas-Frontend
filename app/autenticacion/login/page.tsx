@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { User, Lock, Bus, Package, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Bus, Package, Eye, EyeOff, Route } from 'lucide-react';
 import Link from 'next/link';
 
 const LoginPage = () => {
@@ -18,6 +18,7 @@ const LoginPage = () => {
   };
 
   const handleSubmit = () => {
+    
     console.log('Login attempt:', formData);
     alert('Login exitoso!');
   };
@@ -86,13 +87,13 @@ const LoginPage = () => {
               </button>
             </div>
 
-            <button
+            <Link href={"/autenticacion/roles"}
               type="button"
               onClick={handleSubmit}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Iniciar Sesión
-            </button>
+            </Link>
           </div>
           <div className="mt-6 text-center">
             <p className="text-gray-600">

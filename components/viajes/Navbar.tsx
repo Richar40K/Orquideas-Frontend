@@ -15,13 +15,13 @@ export default function Navbar() {
           <div className="flex-shrink-0" />
           <div className="flex-1 flex justify-center space-x-8">
             <Link
-              href="/viajes"
+              href="/cliente/viajes"
               className="text-lg font-medium hover:text-yellow-300 transition"
             >
               Viajes
             </Link>
             <Link
-              href="/encomiendas"
+              href="/cliente/encomiendas"
               className="text-lg font-medium hover:text-yellow-300 transition"
             >
               Encomiendas
@@ -41,7 +41,14 @@ export default function Navbar() {
                   {fullName}
                 </div>
                 <Link
-                  href="/configuracion"
+                  href="/autenticacion/login"
+                  className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition"
+                >
+                  <Settings className="w-4 h-4" />
+                  Iniciar Sesion
+                </Link>
+                <Link
+                  href="/cliente/configuracion"
                   className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition"
                 >
                   <Settings className="w-4 h-4" />

@@ -35,13 +35,18 @@ const cardItems = [
 
 export const CardItem = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-transparent py-10 px-4">
-      <h2 className="text-5xl font-bold mb-8 text-white ">Explora las rutas</h2>
-      <div className="flex flex-wrap justify-center gap-6 max-w-7xl">
+    <div className="w-full">
+      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 md:mb-10 text-center">
+        Explora las rutas
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 sm:px-6">
         {cardItems.map((item) => (
-          <div key={item.id} className="w-full sm:w-80 md:w-72 lg:w-64 xl:w-64">
-            <CardPresentation {...item} />
-          </div>
+          <CardPresentation 
+            key={item.id}
+            title={item.title}
+            image={item.image}
+            description={item.description}
+          />
         ))}
       </div>
     </div>

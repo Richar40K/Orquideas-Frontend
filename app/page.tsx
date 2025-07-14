@@ -18,7 +18,7 @@ export default function Page() {
               <Link href="#servicios" className="text-gray-700 hover:text-amber-600 transition-colors font-medium">Servicios</Link>
               <Link href="#encomiendas" className="text-gray-700 hover:text-amber-600 transition-colors font-medium">Encomiendas</Link>
               <Link href="#contacto" className="text-gray-700 hover:text-amber-600 transition-colors font-medium">Contacto</Link>
-              <Link href="/autenticacion/login" className="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors font-medium flex items-center">
+              <Link href="/cliente/viajes" className="bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors font-medium flex items-center">
                 <Ticket className="mr-2 h-4 w-4" /> Comprar Pasaje
               </Link>
             </div>
@@ -42,13 +42,13 @@ export default function Page() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href="/autenticacion/login"
+                  href="/cliente/viajes"
                   className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
                 >
                   <Ticket className="mr-2 h-5 w-5" /> Comprar Pasaje
                 </Link>
                 <Link
-                  href="/autenticacion/login"
+                  href="/cliente/encomiendas"
                   className="bg-white/90 hover:bg-white text-gray-900 px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
                 >
                   <PackageCheck className="mr-2 h-5 w-5" /> Enviar Encomienda
@@ -114,14 +114,16 @@ export default function Page() {
 
       <section
         id="rutas"
-        className="relative h-screen w-full flex items-center bg-cover bg-center bg-no-repeat"
+        className="relative min-h-screen w-full flex items-center bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/images/arequipamod.jpg')" }}
       >
+
         <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <CardItem />
-
+        <div className="relative z-10 w-full py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <CardItem />
+          </div>
         </div>
       </section>
 
@@ -134,7 +136,7 @@ export default function Page() {
           <p className="text-xl mb-8 max-w-3xl mx-auto">Comienza hoy mismo. Reserva tus pasajes o envía tus encomiendas con nosotros.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/autenticacion/login"
+              href="/cliente/viajes"
               className="bg-white hover:bg-gray-100 text-amber-600 px-6 py-3 rounded-md transition-colors font-medium flex items-center justify-center"
             >
               <Ticket className="mr-2 h-5 w-5" /> Comprar Pasaje
