@@ -1,9 +1,9 @@
-// viajes/components/viajes/ListaDeViajes.tsx
+ 
 "use client";
 
 import { useRouter } from "next/navigation";
 import { ArrowRightCircle } from "lucide-react";
-import { ViajeFrontend } from "./interfaces"; // Importa la interfaz
+import { ViajeFrontend } from "./interfaces";  
 
 interface ListaDeViajesProps {
   viajesToShow: ViajeFrontend[];
@@ -89,7 +89,7 @@ export default function ListaDeViajes({ viajesToShow, hasSearched, isLoading, er
 import { useRouter } from "next/navigation";
 import { ArrowRightCircle } from "lucide-react";
 
-// Demo: Esta lista debería venir de tu backend
+ 
 const viajes = [
   {
     id: "1",

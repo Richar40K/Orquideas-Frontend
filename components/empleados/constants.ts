@@ -76,5 +76,5 @@ export const positionConfig = {
   }
 } as const;
 export const sampleEmpleados: Empleado[] = [
-  // ... tus datos de ejemplo aquí
+   
 ];

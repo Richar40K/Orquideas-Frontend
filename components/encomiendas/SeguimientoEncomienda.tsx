@@ -52,7 +52,7 @@ export default function SeguimientoEncomienda() {
     setEncomienda(null);
 
     try {
-      // Realizar la búsqueda usando el código directamente
+       
       const response = await fetch(`${API_BASE_URL}/encomiendas/code/${codigo}`);
 
       if (!response.ok) {

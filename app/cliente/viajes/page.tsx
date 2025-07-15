@@ -1,5 +1,5 @@
-// viajes/page.tsx
-import ViajesContainer from "@/components/viajes/ViajesContainer"; // Importa el nuevo contenedor
+ 
+import ViajesContainer from "@/components/viajes/ViajesContainer";  
 
 export default function ViajesPage() {
   return (

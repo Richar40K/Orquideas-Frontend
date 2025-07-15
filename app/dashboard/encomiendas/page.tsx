@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Importar useEffect
+import { useState, useEffect } from 'react';   
 import {
   Search,
-  Plus, // Mantener Plus si el botón "Crear Nueva Encomienda" se mantiene, aunque no tenga funcionalidad de modal de creación
+  Plus,   
   Eye,
   Edit,
   Trash2,
   Filter,
   Copy,
   X,
-  Loader2 // Para el estado de carga
+  Loader2   
 } from 'lucide-react';
 
-// --- Tipos actualizados para coincidir con el backend y el frontend existente ---
-interface UserDTO { // Renombrado para claridad, coincide con el UserDTO de Java
+  
+interface UserDTO {   
   id: number;
   name: string;
   lastName: string;
@@ -22,28 +22,28 @@ interface UserDTO { // Renombrado para claridad, coincide con el UserDTO de Java
   cellPhone: string;
 }
 
-// Esta es la interfaz que el frontend espera para mostrar en la tabla y detalles
+  
 interface EncomiendaFrontend {
-  id: string; // El ID del backend es number, pero el frontend lo usa como string '#1'
-  trackingKey: string; // Corresponde a 'codigo' del backend
-  fullname: string; // Combinación de user.name y user.lastName
-  email: string; // user.email
-  cellPhone: string; // user.cellphone
-  status: 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered'; // Mapeado desde 'estado' del backend
+  id: string;   
+  trackingKey: string;   
+  fullname: string;   
+  email: string;   
+  cellPhone: string;   
+  status: 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered';   
   origin: string;
   destination: string;
   weight: string;
   price: number;
-  // createdAt: string; // Este campo no existe en el backend, lo omitiremos o lo dejaremos como opcional si no se usa
-  // Campos adicionales del backend que no se muestran directamente pero pueden ser útiles:
-  tipo: string; // Tipo de paquete (SOBRE_A4, CAJA_S, etc.)
+    
+    
+  tipo: string;   
   dniDestino: string;
   nombreDestino: string;
   apellidoDestino: string;
-  clave: string; // Clave de la encomienda
+  clave: string;   
 }
 
-// Interfaz para el ResponseEncomiendaDTO del backend
+  
 interface ResponseEncomiendaDTO {
   id: number;
   user: UserDTO;
@@ -58,12 +58,12 @@ interface ResponseEncomiendaDTO {
   precio: number;
   clave: string;
 }
-// --- Fin de tipos actualizados ---
+  
 
 
-const API_URL = process.env.NEXT_PUBLIC_API; // Obtener la URL base de la API
+const API_URL = process.env.NEXT_PUBLIC_API;   
 
-// Mapeo de estados del backend a los estados del frontend
+  
 const statusBackendToFrontend = {
   PENDIENTE: 'pending',
   CONFIRMADO: 'confirmed',
@@ -72,7 +72,7 @@ const statusBackendToFrontend = {
   ENTREGADO: 'delivered',
 };
 
-// Mapeo de estados del frontend a los estados del backend
+  
 const statusFrontendToBackend = {
   pending: 'PENDIENTE',
   confirmed: 'CONFIRMADO',
@@ -111,27 +111,27 @@ const statusConfig = {
 };
 
 const Encomiendas = () => {
-  const [encomiendas, setEncomiendas] = useState<EncomiendaFrontend[]>([]); // Ahora gestionaremos las encomiendas desde el estado
+  const [encomiendas, setEncomiendas] = useState<EncomiendaFrontend[]>([]);   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedEncomienda, setSelectedEncomienda] = useState<EncomiendaFrontend | null>(null);
-  const [loading, setLoading] = useState(true); // Estado de carga inicial
-  const [error, setError] = useState<string | null>(null); // Estado para errores
+  const [loading, setLoading] = useState(true);   
+  const [error, setError] = useState<string | null>(null);   
 
-  // --- Función de mapeo de backend DTO a frontend Encomienda ---
+    
   const mapBackendToFrontend = (backendData: ResponseEncomiendaDTO[]): EncomiendaFrontend[] => {
     return backendData.map(item => ({
-      id: `#${item.id}`, // Mapear el ID numérico a string con '#'
+      id: `#${item.id}`,   
       trackingKey: item.codigo,
       fullname: `${item.user.name} ${item.user.lastName}`,
       email: item.user.email,
       cellPhone: item.user.cellPhone,
-      status: statusBackendToFrontend[item.estado] as EncomiendaFrontend['status'], // Mapear estado
+      status: statusBackendToFrontend[item.estado] as EncomiendaFrontend['status'],   
       origin: item.origen,
       destination: item.destino,
-      weight: item.tipo, // No hay peso directo en el backend, se puede dejar un valor por defecto o eliminar
+      weight: item.tipo,   
       price: item.precio,
-      tipo: item.tipo, // Añadir tipo para detalles si es necesario
+      tipo: item.tipo,   
       dniDestino: item.dniDestino,
       nombreDestino: item.nombreDestino,
       apellidoDestino: item.apellidoDestino,
@@ -139,7 +139,7 @@ const Encomiendas = () => {
     }));
   };
 
-  // --- Función para cargar las encomiendas desde el backend ---
+    
   const fetchEncomiendas = async () => {
     setLoading(true);
     setError(null);
@@ -149,7 +149,7 @@ const Encomiendas = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data: ResponseEncomiendaDTO[] = await response.json();
-      setEncomiendas(mapBackendToFrontend(data)); // Mapear y establecer los datos
+      setEncomiendas(mapBackendToFrontend(data));   
     } catch (e: any) {
       console.error("Error fetching encomiendas:", e);
       setError(`Error al cargar encomiendas: ${e.message}`);
@@ -158,7 +158,7 @@ const Encomiendas = () => {
     }
   };
 
-  // Cargar encomiendas al montar el componente
+    
   useEffect(() => {
     fetchEncomiendas();
   }, []);
@@ -200,10 +200,10 @@ const Encomiendas = () => {
 
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
-    // Volver a cargar los datos
+      
     await fetchEncomiendas();
     
-    // Cerrar el modal si está abierto
+      
     setSelectedEncomienda(null);
     
     alert("Estado cambiado con éxito");
@@ -223,7 +223,7 @@ const Encomiendas = () => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta encomienda?')) {
       return;
     }
-    const id = Number(encomiendaIdString.replace('#', '')); // Convertir de '#ID' a número
+    const id = Number(encomiendaIdString.replace('#', ''));   
 
     try {
       const response = await fetch(`${API_URL}/encomiendas/${id}`, {
@@ -232,7 +232,7 @@ const Encomiendas = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      // Si la eliminación es exitosa, actualiza la lista de encomiendas
+        
       setEncomiendas(prev => prev.filter(e => e.id !== encomiendaIdString));
       alert('Encomienda eliminada exitosamente.');
     } catch (e: any) {
@@ -393,7 +393,7 @@ const Encomiendas = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <select
                             value={encomienda.status}
-                            onChange={(e) => handleStatusChange(encomienda.id, e.target.value)} // Asegúrate de que encomienda.id esté en el formato correcto
+                            onChange={(e) => handleStatusChange(encomienda.id, e.target.value)}   
                             className={`text-xs px-3 py-1 rounded-full border font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 ${statusConfig[encomienda.status]?.color || 'bg-gray-200'}`}
                           >
                             <option value="pending">🟡 Pendiente</option>

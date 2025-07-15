@@ -36,7 +36,7 @@ export default function DetalleViajePage() {
         setIsLoading(true);
         setError(null);
         
-        const apiUrl = process.env.NEXT_PUBLIC_API || "http://localhost:8090/api";
+        const apiUrl = process.env.NEXT_PUBLIC_API;
         
         const viajeResponse = await fetch(`${apiUrl}/viajes/${params.id}`);
         if (!viajeResponse.ok) {
@@ -189,10 +189,10 @@ export default function DetalleViajePage() {
             className="w-full mt-8 bg-green-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-green-700 transition disabled:bg-gray-300"
             onClick={() => {
               if (asientoSeleccionado) {
-                // Aquí deberías llamar a tu API para crear la reserva
-                // y luego redirigir al pago
+                  
+                  
                 alert(`Reserva del asiento ${asientoSeleccionado} confirmada. Redirigiendo a pago...`);
-                // window.location.href = "https://www.mercadopago.com.pe";
+                  
               }
             }}
           >

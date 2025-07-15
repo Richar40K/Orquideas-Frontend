@@ -1,16 +1,16 @@
-// viajes/components/viajes/TripSearchBar.tsx
+ 
 "use client";
 
 import { useState, useEffect } from "react";
 import { ArrowLeftRight } from "lucide-react";
-import { Ruta } from "./interfaces"; // Importa la interfaz Ruta
+import { Ruta } from "./interfaces";  
 
 const inputStyle = "appearance-none bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-300 transition w-full sm:w-40";
 
 interface TripSearchBarProps {
   onSearch: (origen: string, destino: string, fecha: string) => void;
-  rutas: Ruta[]; // Recibe las rutas del contenedor
-  isLoading: boolean; // Recibe el estado de carga de la búsqueda
+  rutas: Ruta[];  
+  isLoading: boolean;  
 }
 
 export default function TripSearchBar({ onSearch, rutas, isLoading }: TripSearchBarProps) {
@@ -20,23 +20,23 @@ export default function TripSearchBar({ onSearch, rutas, isLoading }: TripSearch
   const [minDate, setMinDate] = useState<string>("");
   const [maxDate, setMaxDate] = useState<string>("");
 
-  // Inicializar origen, destino y fechas cuando las rutas estén disponibles
+   
   useEffect(() => {
     if (rutas.length > 0) {
       const origins = Array.from(new Set(rutas.map(ruta => ruta.origen)));
-      if (origins.length > 0 && !origin) { // Solo inicializa si no hay un origen ya seleccionado
+      if (origins.length > 0 && !origin) {  
         setOrigin(origins[0]);
       }
 
-      // Si ya hay un origen, inicializa el destino
+       
       if (origin) {
         const firstOriginDests = rutas
           .filter(r => r.origen === origin)
           .map(r => r.destino);
-        if (firstOriginDests.length > 0 && !destination) { // Solo inicializa si no hay un destino ya seleccionado
+        if (firstOriginDests.length > 0 && !destination) {  
           setDestination(firstOriginDests[0]);
         }
-      } else if (origins.length > 0) { // Si no hay origen, toma el primero y su primer destino
+      } else if (origins.length > 0) {  
         const firstOriginDests = rutas
           .filter(r => r.origen === origins[0])
           .map(r => r.destino);
@@ -45,19 +45,19 @@ export default function TripSearchBar({ onSearch, rutas, isLoading }: TripSearch
         }
       }
 
-      // Configurar rango de fechas (hoy hasta fin de mes)
+       
       const today = new Date();
       const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       
       setMinDate(today.toISOString().split('T')[0]);
       setMaxDate(lastDayOfMonth.toISOString().split('T')[0]);
-      if (!date) { // Solo inicializa la fecha si no hay una ya seleccionada
+      if (!date) {  
         setDate(today.toISOString().split('T')[0]);
       }
     }
-  }, [rutas, origin, destination, date]); // Dependencias para re-inicializar si cambian las rutas o si los estados están vacíos
+  }, [rutas, origin, destination, date]);  
 
-  // Obtener destinos disponibles para el origen seleccionado
+   
   const getDestinationsForOrigin = (selectedOrigin: string): string[] => {
     return Array.from(
       new Set(
@@ -71,7 +71,7 @@ export default function TripSearchBar({ onSearch, rutas, isLoading }: TripSearch
   const handleOriginChange = (value: string) => {
     setOrigin(value);
     const newDestinations = getDestinationsForOrigin(value);
-    setDestination(newDestinations[0] || ""); // Establece el primer destino disponible para el nuevo origen
+    setDestination(newDestinations[0] || "");  
   };
 
   const swapLocations = () => {
@@ -90,7 +90,7 @@ export default function TripSearchBar({ onSearch, rutas, isLoading }: TripSearch
 
   const handleSearchClick = () => {
     if (origin && destination && date) {
-      onSearch(origin, destination, date); // Llama a la función onSearch del contenedor
+      onSearch(origin, destination, date);  
     }
   };
 

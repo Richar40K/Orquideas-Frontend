@@ -11,12 +11,12 @@ export default function ViajesContainer() {
     const [isLoadingSearch, setIsLoadingSearch] = useState<boolean>(false);
     const [searchError, setSearchError] = useState<string | null>(null);
 
-    // Estado para las rutas disponibles (para TripSearchBar)
+     
     const [rutas, setRutas] = useState<Ruta[]>([]);
     const [isLoadingRutas, setIsLoadingRutas] = useState<boolean>(true);
     const [rutasError, setRutasError] = useState<string | null>(null);
 
-    // Cargar rutas al inicio (para los selects de origen/destino)
+     
     useEffect(() => {
         const fetchRutas = async () => {
             try {
@@ -36,7 +36,7 @@ export default function ViajesContainer() {
         fetchRutas();
     }, []);
 
-    // Función para mapear datos del backend a la interfaz de frontend
+     
     const mapBackendToFrontendViajes = (data: ViajeBackend[]): ViajeFrontend[] => {
         return data.map((viaje) => {
             const horaSalidaFormatted = viaje.horaSalida ? viaje.horaSalida.substring(0, 5) : "N/A";
@@ -77,23 +77,23 @@ export default function ViajesContainer() {
                 destino: viaje.destino,
                 duracion: duracion,
                 precio: viaje.precio,
-                asientosDisponibles: 0, // Esto aún necesita ser obtenido del backend
+                asientosDisponibles: 0,  
             };
         });
     };
 
-    // Función que TripSearchBar llamará al hacer la búsqueda
+     
     const handleSearch = async (origen: string, destino: string, fecha: string) => {
         try {
             setIsLoadingSearch(true);
             setSearchError(null);
             const apiUrl = process.env.NEXT_PUBLIC_API;
 
-            // Construir la URL con los parámetros de búsqueda
-            // NOTA: El backend actual solo filtra por estado y fecha.
-            // Para que origen y destino funcionen, el backend necesitaría una modificación.
-            // Si no se puede modificar el backend, el filtrado por origen/destino
-            // tendría que hacerse aquí en el frontend después de obtener todos los viajes programados.
+             
+             
+             
+             
+             
             const queryParams = new URLSearchParams();
             if (origen) queryParams.append('origen', origen);
             if (destino) queryParams.append('destino', destino);
@@ -103,13 +103,13 @@ export default function ViajesContainer() {
             const data: ViajeBackend[] = await response.json();
 
             console.log("Parámetros enviados:", { origen, destino, fecha });
-            console.log("Datos recibidos:", data); // <-- Añade esto
+            console.log("Datos recibidos:", data);  
 
-            // Filtrado manual en frontend como plan B
+             
             const filteredData = data.filter(viaje =>
                 (!origen || viaje.origen === origen) &&
                 (!destino || viaje.destino === destino) &&
-                (!fecha || viaje.fechaSalida.includes(fecha)) // <-- Filtro manual por fecha
+                (!fecha || viaje.fechaSalida.includes(fecha))  
             );
 
 
@@ -118,19 +118,19 @@ export default function ViajesContainer() {
         } catch (e: any) {
             console.error("Error searching trips:", e);
             setSearchError(e.message || "No se pudieron cargar los viajes. Inténtalo de nuevo más tarde.");
-            setFilteredViajes([]); // Limpiar resultados en caso de error
+            setFilteredViajes([]);  
         } finally {
             setIsLoadingSearch(false);
         }
     };
 
-    // Cargar viajes programados iniciales al montar el contenedor
+     
     useEffect(() => {
         const fetchInitialViajes = async () => {
             try {
-                setIsLoadingSearch(true); // Usamos el mismo loading para la carga inicial
+                setIsLoadingSearch(true);  
                 const apiUrl = process.env.NEXT_PUBLIC_API;
-                const response = await fetch(`${apiUrl}/viajes/programados`); // Sin filtros iniciales
+                const response = await fetch(`${apiUrl}/viajes/programados`);  
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -144,7 +144,7 @@ export default function ViajesContainer() {
             }
         };
         fetchInitialViajes();
-    }, []); // Se ejecuta solo una vez al montar el componente
+    }, []);  
 
     if (isLoadingRutas) {
         return <div className="text-center p-6 text-blue-700">Cargando rutas disponibles...</div>;
@@ -162,14 +162,14 @@ export default function ViajesContainer() {
         <>
             <TripSearchBar
                 onSearch={handleSearch}
-                rutas={rutas} // Pasa las rutas al TripSearchBar
-                isLoading={isLoadingSearch} // Pasa el estado de carga de la búsqueda
+                rutas={rutas}  
+                isLoading={isLoadingSearch}  
             />
             <ListaDeViajes
                 viajesToShow={filteredViajes}
                 hasSearched={hasSearched}
-                isLoading={isLoadingSearch} // Pasa el estado de carga a ListaDeViajes
-                error={searchError} // Pasa el error de búsqueda a ListaDeViajes
+                isLoading={isLoadingSearch}  
+                error={searchError}  
             />
         </>
     );

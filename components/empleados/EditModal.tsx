@@ -37,10 +37,10 @@ export const EditEmpleadoModal = ({ isOpen, onClose, empleado, onSave }: EditEmp
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Cargar datos del empleado cuando el modal se abre o cambia el empleado
+     
     useEffect(() => {
         if (empleado) {
-            // Parsear el nombre completo en partes
+             
             const nameParts = empleado.fullname.split(' ');
 
             setFormData({
@@ -110,7 +110,7 @@ export const EditEmpleadoModal = ({ isOpen, onClose, empleado, onSave }: EditEmp
             onSave(updatedEmpleado);
             onClose();
 
-            // Recargar la página después de cerrar el modal
+             
             window.location.reload();
         } catch (err: any) {
             setError(err.message || 'Ocurrió un error al actualizar el usuario');
