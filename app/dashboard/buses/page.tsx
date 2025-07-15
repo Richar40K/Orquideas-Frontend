@@ -1,101 +1,155 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { JSX } from 'react/jsx-runtime';
 
-// Tipos/Interfaces
+// Enum que coincide con los valores que envía/recibe el backend
+export enum StateEnum {
+  ACTIVO = 'ACTIVO',
+  INACTIVO = 'INACTIVO',
+  MANTENIMIENTO = 'MANTENIMIENTO',
+  FUERA_DE_SERVICIO = 'FUERA_DE_SERVICIO'
+}
+
+// Etiquetas legibles para UI
+const stateLabels: Record<StateEnum, string> = {
+  [StateEnum.ACTIVO]: 'Activo',
+  [StateEnum.INACTIVO]: 'Inactivo',
+  [StateEnum.MANTENIMIENTO]: 'Mantenimiento',
+  [StateEnum.FUERA_DE_SERVICIO]: 'Fuera de servicio'
+};
+
 interface Bus {
   id: number;
   plate: string;
   type: string;
   capacity: number;
-  state: string;
+  state: StateEnum;
 }
 
 interface FormData {
   plate: string;
   type: string;
   capacity: string;
-  state: string;
+  state: StateEnum;
 }
 
 export default function BusAdminDashboard(): JSX.Element {
-  const [buses, setBuses] = useState<Bus[]>([
-    { id: 1, plate: 'ABC-123', type: 'Urbano', capacity: 45, state: 'Activo' },
-    { id: 2, plate: 'DEF-456', type: 'Interprovincial', capacity: 55, state: 'Mantenimiento' },
-    { id: 3, plate: 'GHI-789', type: 'Express', capacity: 40, state: 'Activo' },
-    { id: 4, plate: 'JKL-012', type: 'Urbano', capacity: 45, state: 'Inactivo' },
-    { id: 5, plate: 'MNO-345', type: 'Interprovincial', capacity: 60, state: 'Activo' },
-  ]);
-
+  const apiUrl = `${process.env.NEXT_PUBLIC_API}/bus`;
+  const [buses, setBuses] = useState<Bus[]>([]);
   const [formData, setFormData] = useState<FormData>({
     plate: '',
     type: '',
     capacity: '',
-    state: 'Activo'
+    state: StateEnum.ACTIVO
   });
-
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const busTypes: string[] = ['Urbano', 'Interprovincial', 'Express', 'Turístico'];
-  const capacities: number[] = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
-  const states: string[] = ['Activo', 'Inactivo', 'Mantenimiento', 'Fuera de Servicio'];
+  const busTypes = ['Urbano', 'Interprovincial', 'Express', 'Turístico'];
+  const capacities = [25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+  const states = Object.values(StateEnum) as StateEnum[];
 
-  const handleSubmit = (): void => {
+  const transformBus = (item: any): Bus => ({
+    id: item.id,
+    plate: item.placa,
+    type: item.tipo,
+    capacity: item.capacidad,
+    state: item.estado as StateEnum
+  });
+
+  useEffect(() => {
+    setLoading(true);
+    setErrorMsg(null);
+    fetch(apiUrl)
+      .then(res => {
+        if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+        return res.json();
+      })
+      .then((data: any[]) => setBuses(data.map(transformBus)))
+      .catch(err => setErrorMsg(err.message))
+      .finally(() => setLoading(false));
+  }, [apiUrl]);
+
+  const handleSubmit = async (): Promise<void> => {
     if (!formData.plate || !formData.type || !formData.capacity) return;
-    
-    if (editingId) {
-      setBuses(buses.map(bus => 
-        bus.id === editingId ? { 
-          ...formData, 
-          id: editingId,
-          capacity: parseInt(formData.capacity, 10)
-        } : bus
-      ));
+    setLoading(true);
+    setErrorMsg(null);
+
+    const payload = {
+      placa: formData.plate,
+      tipo: formData.type,
+      capacidad: parseInt(formData.capacity, 10),
+      estado: formData.state
+    };
+
+    try {
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const url = editingId !== null ? `${apiUrl}/${editingId}` : apiUrl;
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`Server responded ${res.status}`);
+      const data = await res.json();
+      const busItem = transformBus(data);
+      setBuses(prev => editingId !== null
+        ? prev.map(b => b.id === busItem.id ? busItem : b)
+        : [...prev, busItem]
+      );
       setEditingId(null);
-    } else {
-      const newBus: Bus = {
-        id: Math.max(...buses.map(b => b.id), 0) + 1,
-        ...formData,
-        capacity: parseInt(formData.capacity, 10)
-      };
-      setBuses([...buses, newBus]);
+      setFormData({ plate: '', type: '', capacity: '', state: StateEnum.ACTIVO });
+    } catch (err) {
+      setErrorMsg((err as Error).message);
+    } finally {
+      setLoading(false);
     }
-    setFormData({ plate: '', type: '', capacity: '', state: 'Activo' });
   };
 
   const handleEdit = (bus: Bus): void => {
     setFormData({
-      ...bus,
-      capacity: bus.capacity.toString()
+      plate: bus.plate,
+      type: bus.type,
+      capacity: bus.capacity.toString(),
+      state: bus.state
     });
     setEditingId(bus.id);
   };
 
-  const handleDelete = (id: number): void => {
-    setBuses(buses.filter(bus => bus.id !== id));
+  const handleDelete = async (id: number): Promise<void> => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`Delete failed ${res.status}`);
+      setBuses(prev => prev.filter(b => b.id !== id));
+    } catch (err) {
+      setErrorMsg((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredBuses: Bus[] = buses.filter(bus =>
+  const filteredBuses = buses.filter(bus =>
     bus.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
     bus.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStateColor = (state: string): string => {
+  const getStateColor = (state: StateEnum): string => {
     switch (state) {
-      case 'Activo': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Inactivo': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'Mantenimiento': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Fuera de Servicio': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case StateEnum.ACTIVO: return 'bg-green-100 text-green-800 border-green-200';
+      case StateEnum.INACTIVO: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case StateEnum.MANTENIMIENTO: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case StateEnum.FUERA_DE_SERVICIO: return 'bg-red-100 text-red-800 border-red-200';
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-blue-600 rounded-lg">
@@ -106,8 +160,7 @@ export default function BusAdminDashboard(): JSX.Element {
           <p className="text-gray-600">Gestiona tu flota de buses de manera eficiente</p>
         </div>
 
-        {/* Form Section */}
-        <div className="bg-white rounded-lg shadow-md border p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md border-transparent p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
             <span className="text-blue-600">➕</span>
             {editingId ? 'Editar Bus' : 'Nuevo Bus'}
@@ -168,11 +221,11 @@ export default function BusAdminDashboard(): JSX.Element {
               </label>
               <select
                 value={formData.state}
-                onChange={(e) => setFormData({...formData, state: e.target.value})}
+                onChange={(e) => setFormData({...formData, state: e.target.value as StateEnum})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {states.map(state => (
-                  <option key={state} value={state}>{state}</option>
+                  <option key={state} value={state}>{stateLabels[state]}</option>
                 ))}
               </select>
             </div>
@@ -190,7 +243,7 @@ export default function BusAdminDashboard(): JSX.Element {
                   type="button"
                   onClick={() => {
                     setEditingId(null);
-                    setFormData({ plate: '', type: '', capacity: '', state: 'Activo' });
+                    setFormData({ plate: '', type: '', capacity: '', state: StateEnum.ACTIVO });
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
@@ -201,9 +254,7 @@ export default function BusAdminDashboard(): JSX.Element {
           </div>
         </div>
 
-        {/* Table Section */}
-        <div className="bg-white rounded-lg shadow-md border overflow-hidden">
-          {/* Search Header */}
+        <div className="bg-white rounded-lg shadow-md border-0 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-800">Lista de Buses</h2>
@@ -224,8 +275,6 @@ export default function BusAdminDashboard(): JSX.Element {
             </div>
           </div>
 
-
-          {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -275,7 +324,7 @@ export default function BusAdminDashboard(): JSX.Element {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium border ${getStateColor(bus.state)}`}>
-                        {bus.state}
+                        {stateLabels[bus.state]}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
