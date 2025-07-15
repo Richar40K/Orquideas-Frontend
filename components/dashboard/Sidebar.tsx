@@ -1,13 +1,14 @@
-import { 
-  Package, 
-  MapPin, 
-  Users, 
-  Bus, 
-  CreditCard, 
-  BarChart3, 
+import {
+  Package,
+  MapPin,
+  Users,
+  Bus,
+  CreditCard,
+  BarChart3,
   Settings,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 
 
 interface MenuItem {
@@ -63,7 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeSection
             <p className="text-xs text-slate-500">Sistema de Gestión</p>
           </div>
         </div>
-        <button 
+        <button
           onClick={onClose}
           className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
         >
@@ -78,22 +79,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, activeSection
             <button
               key={item.id}
               onClick={() => onSectionChange(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                activeSection === item.id 
-                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50 shadow-sm' 
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${activeSection === item.id
+                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50 shadow-sm'
                   : 'hover:bg-slate-50 hover:shadow-sm'
-              }`}
+                }`}
             >
               <Icon className={`w-5 h-5 ${activeSection === item.id ? item.color : 'text-slate-400 group-hover:text-slate-600'}`} />
-              <span className={`font-medium ${
-                activeSection === item.id ? 'text-slate-800' : 'text-slate-600 group-hover:text-slate-800'
-              }`}>
+              <span className={`font-medium ${activeSection === item.id ? 'text-slate-800' : 'text-slate-600 group-hover:text-slate-800'
+                }`}>
                 {item.label}
               </span>
             </button>
           );
         })}
       </nav>
+      <div className="mt-auto p-4 border-t border-slate-200/60">
+        <Link href="/autenticacion/roles"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 transition-colors text-slate-700 font-medium"
+        >
+          ← Regresar
+        </Link>
+      </div>
     </div>
   );
 };

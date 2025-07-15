@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { 
   User, 
@@ -9,6 +10,12 @@ import Link from "next/link";
 import { NextPage } from 'next';
 
 const RoleSelectionScreen: NextPage = () => {
+
+  const handleLogout = () => {
+
+    document.cookie = "token=; path=/; max-age=0";
+    window.location.href = "/autenticacion/login";
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-6">
       {/* Encabezado */}
@@ -56,6 +63,7 @@ const RoleSelectionScreen: NextPage = () => {
       </div>
 
       <button 
+      onClick={handleLogout}
         className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors"
       >
         <LogOut className="w-5 h-5" />

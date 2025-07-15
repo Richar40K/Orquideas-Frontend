@@ -36,6 +36,12 @@ export default function PerfilConfigPage() {
   const email = userData?.email || "";
   const cellPhone = userData?.cellPhone || "";
 
+  const handleLogout = () => {
+
+    document.cookie = "token=; path=/; max-age=0";
+    window.location.href = "/autenticacion/login";
+  };
+
   return (
     <div className="w-full max-w-7xl mx-4 bg-white rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden backdrop-blur-sm min-h-[80vh]">
       {/* Sidebar azul */}
@@ -81,10 +87,10 @@ export default function PerfilConfigPage() {
 
         {/* Footer del sidebar */}
         <div className="mt-auto pt-6 border-t border-white/20">
-          <Link href={"/cliente/viajes"} className="w-full flex items-center gap-3 px-4 py-3 text-red-200 hover:text-red-100 transition-colors">
+          <button onClick={handleLogout}  className="w-full flex items-center gap-3 px-4 py-3 text-red-200 hover:text-red-100 transition-colors">
             <LogOut className="w-5 h-5" />
             <span>Cerrar sesión</span>
-          </Link>
+          </button>
         </div>
       </div>
 
