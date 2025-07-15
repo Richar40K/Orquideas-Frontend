@@ -16,17 +16,62 @@ export default function RegisterPage () {
     password: ''
   });
 
+  const [usernameAvailable, setUsernameAvailable] = useState(true);
+   const checkUsername = async (username: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/users/check-username?username=${username}`);
+      const data = await res.json();
+      setUsernameAvailable(data.available);
+    } catch (err) {
+      setUsernameAvailable(true); // en caso de error, permitir por precaución
+    }
+  };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    if (name === 'username') {
+      checkUsername(value);
+    }
   };
 
-  const handleSubmit = () => {
-    console.log('Registration attempt:', formData);
-    alert('Registro exitoso!');
+  const handleSubmit = async () => {
+     if (!usernameAvailable) {
+      alert('❌ El nombre de usuario ya está en uso. Elige otro.');
+      return;
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.firstName,
+          secondName: formData.secondName,
+          lastName: formData.lastName,
+          dni: formData.dni,
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al registrar');
+      }
+
+      alert('✅ Registro exitoso');
+      window.location.href = '/autenticacion/login';
+
+    } catch (error: any) {
+      alert(`❌ Error: ${error.message}`);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -136,6 +181,7 @@ export default function RegisterPage () {
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
                 required
               />
+              
             </div>
 
             <div className="relative">

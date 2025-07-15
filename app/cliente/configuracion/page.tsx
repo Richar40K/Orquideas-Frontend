@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Bus, Package, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ChevronRight, Calendar, MapPin, Clock, Star } from "lucide-react";
+import { getUserFromToken } from "@/utils/getUserFromToken";
 import Link from "next/link";
+import axios from "axios";
 
 const menu = [
   { key: "viajes", label: "Mis Viajes", icon: Bus, color: "bg-blue-500", count: 3 },
@@ -11,6 +13,27 @@ const menu = [
 
 export default function PerfilConfigPage() {
   const [active, setActive] = useState("viajes");
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const username = getUserFromToken();
+      if (!username) return;
+
+      try {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API}/users/username/${username}`);
+        setUserData(res.data);
+      } catch (error) {
+        console.error("Error al obtener datos del usuario", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const fullName = userData ? `${userData.name} ${userData.lastName}` : "Cargando...";
+  const email = userData?.email || "";
+  const cellPhone = userData?.cellPhone || "";
   
   return (
     <div className="w-full max-w-7xl mx-4 bg-white rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden backdrop-blur-sm min-h-[80vh]">
@@ -22,7 +45,7 @@ export default function PerfilConfigPage() {
             <User className="w-8 h-8 text-white" />
           </div>
           <div className="text-center">
-            <div className="font-bold text-lg">Ricardo Palomino</div>
+            <div className="font-bold text-lg">{fullName}</div>
             <div className="text-xs text-blue-200 flex items-center justify-center gap-1 mt-1">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               Cliente Premium
@@ -81,7 +104,7 @@ export default function PerfilConfigPage() {
         <div className="relative z-10">
           {active === "viajes" && <MisViajes />}
           {active === "encomiendas" && <MisEncomiendas />}
-          {active === "configuracion" && <ConfigForm />}
+          {active === "configuracion" && <ConfigForm nombre={fullName} email={email} cellPhone={cellPhone} />}
         </div>
       </div>
     </div>
@@ -264,11 +287,11 @@ function MisEncomiendas() {
   );
 }
 
-function ConfigForm() {
+function ConfigForm({ nombre, email, cellPhone }: { nombre: string, email: string, cellPhone: string }){
   const [formData, setFormData] = useState({
-    nombre: "Ricardo Palomino",
-    email: "ricardo@email.com",
-    telefono: "+51 987 654 321",
+    nombre,
+    email,
+    cellPhone,
     password: "",
     confirmPassword: "",
     notificaciones: true,
@@ -327,9 +350,9 @@ function ConfigForm() {
             <div>
               <label className="block text-slate-700 mb-1 md:mb-2 text-sm md:text-base font-medium">Teléfono</label>
               <input
-                type="tel"
-                name="telefono"
-                value={formData.telefono}
+                type="cellPhone"
+                name="cellPhone"
+                value={formData.cellPhone|| ""}
                 onChange={handleChange}
                 className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm md:text-base"
               />

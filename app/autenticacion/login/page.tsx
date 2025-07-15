@@ -1,7 +1,10 @@
 'use client';
 import React, { useState } from 'react';
-import { User, Lock, Bus, Package, Eye, EyeOff, Route } from 'lucide-react';
+import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation';
+import { User, Lock, Bus, Package, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { jwtDecode } from 'jwt-decode';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -9,6 +12,7 @@ const LoginPage = () => {
     username: '',
     password: ''
   });
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -17,11 +21,49 @@ const LoginPage = () => {
     });
   };
 
-  const handleSubmit = () => {
-    
-    console.log('Login attempt:', formData);
-    alert('Login exitoso!');
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/seguridad/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Credenciales incorrectas');
+      }
+
+      const data = await response.json();
+
+      // 💾 Guardar token en cookie
+      Cookies.set('token', data.access_token, {
+        path: '/',
+        expires: 1, // 1 día
+        secure: process.env.NODE_ENV === 'production', // solo HTTPS en producción
+        sameSite: 'lax',
+      });
+      const decoded: any = jwtDecode(data.access_token);
+      const roles: string[] = decoded.roles || [];
+
+      // 🔁 Redirección según roles
+      const hasUser = roles.includes('ROLE_USER');
+      const hasAdmin = roles.includes('ROLE_ADMIN');
+
+      if (hasUser && hasAdmin) {
+        router.push('/autenticacion/roles');
+      } else if (hasUser) {
+        router.push('/cliente/viajes');
+      } else {
+        alert('No tienes permisos válidos');
+      }
+
+    } catch (err: any) {
+      alert(`Error al iniciar sesión: ${err.message}`);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -98,8 +140,8 @@ const LoginPage = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               ¿No tienes cuenta?
-              <Link 
-                href="/autenticacion/registro" 
+              <Link
+                href="/autenticacion/registro"
                 className="ml-2 text-blue-600 hover:text-blue-800 font-semibold hover:underline transition-colors"
               >
                 Regístrate
@@ -127,3 +169,7 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
+function jwt_decode(access_token: any): any {
+  throw new Error('Function not implemented.');
+}
