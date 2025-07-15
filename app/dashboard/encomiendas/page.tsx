@@ -1,100 +1,86 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Eye, 
-  Edit, 
+import { useState, useEffect } from 'react'; // Importar useEffect
+import {
+  Search,
+  Plus, // Mantener Plus si el botón "Crear Nueva Encomienda" se mantiene, aunque no tenga funcionalidad de modal de creación
+  Eye,
+  Edit,
   Trash2,
   Filter,
   Copy,
-  X
+  X,
+  Loader2 // Para el estado de carga
 } from 'lucide-react';
 
-// Tipos
-interface Encomienda {
-  id: string;
-  trackingKey: string;
-  fullname: string;
+// --- Tipos actualizados para coincidir con el backend y el frontend existente ---
+interface UserDTO { // Renombrado para claridad, coincide con el UserDTO de Java
+  id: number;
+  name: string;
+  lastName: string;
   email: string;
-  phone: string;
-  status: 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered';
-  origin: string;
-  destination: string;
-  weight: number;
-  price: number;
-  createdAt: string;
+  cellPhone: string;
 }
 
-// Datos de ejemplo
-const encomiendas: Encomienda[] = [
-  {
-    id: '#1',
-    trackingKey: 'ORQ-2024-001',
-    fullname: 'Damilare Anjorin',
-    email: 'damilareanjorin1@gmail.com',
-    phone: '+2348106420637',
-    status: 'pending',
-    origin: 'Lima',
-    destination: 'Arequipa',
-    weight: 2.5,
-    price: 85,
-    createdAt: '2024-07-05'
-  },
-  {
-    id: '#2',
-    trackingKey: 'ORQ-2024-002',
-    fullname: 'María García',
-    email: 'maria.garcia@gmail.com',
-    phone: '+51987654321',
-    status: 'confirmed',
-    origin: 'Arequipa',
-    destination: 'Cusco',
-    weight: 1.8,
-    price: 65,
-    createdAt: '2024-07-04'
-  },
-  {
-    id: '#3',
-    trackingKey: 'ORQ-2024-003',
-    fullname: 'Carlos Mendoza',
-    email: 'carlos.mendoza@gmail.com',
-    phone: '+51912345678',
-    status: 'paid',
-    origin: 'Lima',
-    destination: 'Trujillo',
-    weight: 3.2,
-    price: 95,
-    createdAt: '2024-07-03'
-  },
-  {
-    id: '#4',
-    trackingKey: 'ORQ-2024-004',
-    fullname: 'Ana Rodríguez',
-    email: 'ana.rodriguez@gmail.com',
-    phone: '+51923456789',
-    status: 'shipped',
-    origin: 'Cusco',
-    destination: 'Puno',
-    weight: 1.5,
-    price: 70,
-    createdAt: '2024-07-02'
-  },
-  {
-    id: '#5',
-    trackingKey: 'ORQ-2024-005',
-    fullname: 'Pedro Sánchez',
-    email: 'pedro.sanchez@gmail.com',
-    phone: '+51934567890',
-    status: 'delivered',
-    origin: 'Arequipa',
-    destination: 'Lima',
-    weight: 2.8,
-    price: 80,
-    createdAt: '2024-07-01'
-  }
-];
+// Esta es la interfaz que el frontend espera para mostrar en la tabla y detalles
+interface EncomiendaFrontend {
+  id: string; // El ID del backend es number, pero el frontend lo usa como string '#1'
+  trackingKey: string; // Corresponde a 'codigo' del backend
+  fullname: string; // Combinación de user.name y user.lastName
+  email: string; // user.email
+  cellPhone: string; // user.cellphone
+  status: 'pending' | 'confirmed' | 'paid' | 'shipped' | 'delivered'; // Mapeado desde 'estado' del backend
+  origin: string;
+  destination: string;
+  weight: string;
+  price: number;
+  // createdAt: string; // Este campo no existe en el backend, lo omitiremos o lo dejaremos como opcional si no se usa
+  // Campos adicionales del backend que no se muestran directamente pero pueden ser útiles:
+  tipo: string; // Tipo de paquete (SOBRE_A4, CAJA_S, etc.)
+  dniDestino: string;
+  nombreDestino: string;
+  apellidoDestino: string;
+  clave: string; // Clave de la encomienda
+}
+
+// Interfaz para el ResponseEncomiendaDTO del backend
+interface ResponseEncomiendaDTO {
+  id: number;
+  user: UserDTO;
+  tipo: string;
+  origen: string;
+  destino: string;
+  dniDestino: string;
+  nombreDestino: string;
+  apellidoDestino: string;
+  estado: 'PENDIENTE' | 'CONFIRMADO' | 'PAGADO' | 'ENVIADO' | 'ENTREGADO';
+  codigo: string;
+  precio: number;
+  clave: string;
+}
+// --- Fin de tipos actualizados ---
+
+
+const API_URL = process.env.NEXT_PUBLIC_API; // Obtener la URL base de la API
+
+// Mapeo de estados del backend a los estados del frontend
+const statusBackendToFrontend = {
+  PENDIENTE: 'pending',
+  CONFIRMADO: 'confirmed',
+  PAGADO: 'paid',
+  ENVIADO: 'shipped',
+  ENTREGADO: 'delivered',
+};
+
+// Mapeo de estados del frontend a los estados del backend
+const statusFrontendToBackend = {
+  pending: 'PENDIENTE',
+  confirmed: 'CONFIRMADO',
+  paid: 'PAGADO',
+  shipped: 'ENVIADO',
+  delivered: 'ENTREGADO',
+};
+
 
 const statusConfig = {
   pending: {
@@ -125,37 +111,137 @@ const statusConfig = {
 };
 
 const Encomiendas = () => {
+  const [encomiendas, setEncomiendas] = useState<EncomiendaFrontend[]>([]); // Ahora gestionaremos las encomiendas desde el estado
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedEncomienda, setSelectedEncomienda] = useState<Encomienda | null>(null);
+  const [selectedEncomienda, setSelectedEncomienda] = useState<EncomiendaFrontend | null>(null);
+  const [loading, setLoading] = useState(true); // Estado de carga inicial
+  const [error, setError] = useState<string | null>(null); // Estado para errores
+
+  // --- Función de mapeo de backend DTO a frontend Encomienda ---
+  const mapBackendToFrontend = (backendData: ResponseEncomiendaDTO[]): EncomiendaFrontend[] => {
+    return backendData.map(item => ({
+      id: `#${item.id}`, // Mapear el ID numérico a string con '#'
+      trackingKey: item.codigo,
+      fullname: `${item.user.name} ${item.user.lastName}`,
+      email: item.user.email,
+      cellPhone: item.user.cellPhone,
+      status: statusBackendToFrontend[item.estado] as EncomiendaFrontend['status'], // Mapear estado
+      origin: item.origen,
+      destination: item.destino,
+      weight: item.tipo, // No hay peso directo en el backend, se puede dejar un valor por defecto o eliminar
+      price: item.precio,
+      tipo: item.tipo, // Añadir tipo para detalles si es necesario
+      dniDestino: item.dniDestino,
+      nombreDestino: item.nombreDestino,
+      apellidoDestino: item.apellidoDestino,
+      clave: item.clave,
+    }));
+  };
+
+  // --- Función para cargar las encomiendas desde el backend ---
+  const fetchEncomiendas = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/encomiendas`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: ResponseEncomiendaDTO[] = await response.json();
+      setEncomiendas(mapBackendToFrontend(data)); // Mapear y establecer los datos
+    } catch (e: any) {
+      console.error("Error fetching encomiendas:", e);
+      setError(`Error al cargar encomiendas: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar encomiendas al montar el componente
+  useEffect(() => {
+    fetchEncomiendas();
+  }, []);
 
   const filteredEncomiendas = encomiendas.filter(encomienda => {
     const matchesSearch = encomienda.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         encomienda.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         encomienda.phone.includes(searchTerm) ||
-                         encomienda.trackingKey.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      encomienda.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      encomienda.cellPhone.includes(searchTerm) ||
+      encomienda.trackingKey.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      encomienda.dniDestino.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      encomienda.nombreDestino.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      encomienda.apellidoDestino.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || encomienda.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (encomiendaId: string, newStatus: string) => {
-    // Aquí implementarías la lógica para actualizar el estado
-    console.log(`Cambiando estado de ${encomiendaId} a ${newStatus}`);
+
+
+
+  const handleStatusChange = async (encomiendaIdString: string, newStatusFrontend: string) => {
+  const id = Number(encomiendaIdString.replace('#', ''));
+  const newStatusBackend = statusFrontendToBackend[newStatusFrontend as keyof typeof statusFrontendToBackend];
+
+  if (!newStatusBackend) {
+    console.error("Estado no válido");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/encomiendas/${id}/estado`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ estado: newStatusBackend })
+    });
+
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+
+    // Volver a cargar los datos
+    await fetchEncomiendas();
+    
+    // Cerrar el modal si está abierto
+    setSelectedEncomienda(null);
+    
+    alert("Estado cambiado con éxito");
+
+  } catch (error) {
+    console.error("Error al actualizar:", error);
+    alert("Error al cambiar el estado");
+  }
+};
+
+
+
+
+
+
+  const handleDelete = async (encomiendaIdString: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta encomienda?')) {
+      return;
+    }
+    const id = Number(encomiendaIdString.replace('#', '')); // Convertir de '#ID' a número
+
+    try {
+      const response = await fetch(`${API_URL}/encomiendas/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Si la eliminación es exitosa, actualiza la lista de encomiendas
+      setEncomiendas(prev => prev.filter(e => e.id !== encomiendaIdString));
+      alert('Encomienda eliminada exitosamente.');
+    } catch (e: any) {
+      console.error("Error deleting encomienda:", e);
+      alert(`Error al eliminar encomienda: ${e.message}`);
+    }
   };
 
-  const handleEdit = (encomienda: Encomienda) => {
-    console.log('Editando encomienda:', encomienda);
-    // Aquí implementarías la lógica de edición
-  };
-
-  const handleDelete = (encomiendaId: string) => {
-    console.log('Eliminando encomienda:', encomiendaId);
-    // Aquí implementarías la lógica de eliminación
-  };
-
-  const handleViewDetails = (encomienda: Encomienda) => {
+  const handleViewDetails = (encomienda: EncomiendaFrontend) => {
     setSelectedEncomienda(encomienda);
   };
 
@@ -169,6 +255,7 @@ const Encomiendas = () => {
               <h1 className="text-3xl font-bold text-gray-900">Encomiendas</h1>
               <p className="text-gray-600 mt-2">Gestiona todas las encomiendas del sistema</p>
             </div>
+
           </div>
         </div>
 
@@ -207,125 +294,145 @@ const Encomiendas = () => {
           </div>
         </div>
 
-        {/* Tabla */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Código de Rastreo
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cliente
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contacto
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ruta
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Peso
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Precio
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEncomiendas.map((encomienda, index) => (
-                  <tr key={encomienda.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{encomienda.id}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="text-sm font-mono bg-gray-100 px-3 py-1 rounded-lg text-gray-800 border">
-                          {encomienda.trackingKey}
-                        </div>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(encomienda.trackingKey)}
-                          className="ml-2 text-gray-400 hover:text-indigo-500 transition-colors"
-                          title="Copiar código"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{encomienda.fullname}</div>
-                      <div className="text-sm text-gray-500">{encomienda.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{encomienda.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        <span className="text-blue-600">{encomienda.origin}</span>
-                        <span className="mx-2 text-gray-400">→</span>
-                        <span className="text-purple-600">{encomienda.destination}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{encomienda.weight} kg</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">S/ {encomienda.price}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={encomienda.status}
-                        onChange={(e) => handleStatusChange(encomienda.id, e.target.value)}
-                        className={`text-xs px-3 py-1 rounded-full border font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 ${statusConfig[encomienda.status].color}`}
-                      >
-                        <option value="pending">🟡 Pendiente</option>
-                        <option value="confirmed">🔵 Confirmado</option>
-                        <option value="paid">🟢 Pagado</option>
-                        <option value="shipped">🟣 Enviado</option>
-                        <option value="delivered">✅ Entregado</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleViewDetails(encomienda)}
-                          className="text-indigo-600 hover:text-indigo-900 transition-colors"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(encomienda)}
-                          className="text-yellow-600 hover:text-yellow-900 transition-colors"
-                          title="Editar"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(encomienda.id)}
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Mensajes de carga/error */}
+        {loading && (
+          <div className="flex items-center justify-center py-8 text-gray-600">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" /> Cargando encomiendas...
           </div>
-        </div>
+        )}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
+
+        {/* Tabla */}
+        {!loading && !error && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Código de Rastreo
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cliente
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contacto
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ruta
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Precio
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredEncomiendas.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                        No se encontraron encomiendas.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredEncomiendas.map((encomienda, index) => (
+                      <tr key={encomienda.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{encomienda.id}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="text-sm font-mono bg-gray-100 px-3 py-1 rounded-lg text-gray-800 border">
+                              {encomienda.trackingKey}
+                            </div>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(encomienda.trackingKey)}
+                              className="ml-2 text-gray-400 hover:text-indigo-500 transition-colors"
+                              title="Copiar código"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{encomienda.fullname}</div>
+                          <div className="text-sm text-gray-500">{encomienda.email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{encomienda.cellPhone}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            <span className="text-blue-600">{encomienda.origin}</span>
+                            <span className="mx-2 text-gray-400">→</span>
+                            <span className="text-purple-600">{encomienda.destination}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{encomienda.tipo || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">S/ {encomienda.price?.toFixed(2)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <select
+                            value={encomienda.status}
+                            onChange={(e) => handleStatusChange(encomienda.id, e.target.value)} // Asegúrate de que encomienda.id esté en el formato correcto
+                            className={`text-xs px-3 py-1 rounded-full border font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 ${statusConfig[encomienda.status]?.color || 'bg-gray-200'}`}
+                          >
+                            <option value="pending">🟡 Pendiente</option>
+                            <option value="confirmed">🔵 Confirmado</option>
+                            <option value="paid">🟢 Pagado</option>
+                            <option value="shipped">🟣 Enviado</option>
+                            <option value="delivered">✅ Entregado</option>
+                          </select>
+
+
+
+
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleViewDetails(encomienda)}
+                              className="text-indigo-600 hover:text-indigo-900 transition-colors"
+                              title="Ver detalles"
+                            >
+                              <Eye className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(encomienda.id)}
+                              className="text-red-600 hover:text-red-900 transition-colors"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Modal de detalles */}
         {selectedEncomienda && (
@@ -341,7 +448,7 @@ const Encomiendas = () => {
                     <X className="h-6 w-6" />
                   </button>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Información General</h3>
@@ -366,17 +473,15 @@ const Encomiendas = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Estado</label>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusConfig[selectedEncomienda.status].color}`}>
-                          {statusConfig[selectedEncomienda.status].icon} {statusConfig[selectedEncomienda.status].label}
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusConfig[selectedEncomienda.status]?.color || 'bg-gray-200'}`}>
+                          {statusConfig[selectedEncomienda.status]?.icon} {statusConfig[selectedEncomienda.status]?.label}
                         </span>
+
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
-                        <p className="text-sm text-gray-900">{selectedEncomienda.createdAt}</p>
-                      </div>
+
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Cliente</h3>
                     <div className="space-y-3">
@@ -390,11 +495,11 @@ const Encomiendas = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                        <p className="text-sm text-gray-900">{selectedEncomienda.phone}</p>
+                        <p className="text-sm text-gray-900">{selectedEncomienda.cellPhone}</p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Detalles del Envío</h3>
                     <div className="space-y-3">
@@ -407,12 +512,12 @@ const Encomiendas = () => {
                         <p className="text-sm text-purple-600 font-medium">{selectedEncomienda.destination}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Peso</label>
-                        <p className="text-sm text-gray-900">{selectedEncomienda.weight} kg</p>
+                        <label className="block text-sm font-medium text-gray-700">Tipo</label>
+                        <p className="text-sm text-gray-900">{selectedEncomienda.tipo || 'N/A'} kg</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Precio</label>
-                        <p className="text-sm text-gray-900 font-semibold">S/ {selectedEncomienda.price}</p>
+                        <p className="text-sm text-gray-900 font-semibold">S/ {selectedEncomienda.price?.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>

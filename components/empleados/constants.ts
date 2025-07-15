@@ -1,4 +1,5 @@
-import { Department, Empleado, Status } from './types';
+
+import {Empleado } from './types';
 
 export const departmentConfig = {
   administracion: {
@@ -51,6 +52,29 @@ export const statusConfig = {
   }
 } as const;
 
+export const positionConfig = {
+  GERENTE_GENERAL: {
+    label: 'Gerente General',
+  },
+  EJECUTIVA_VENTAS: {
+    label: 'Ejecutiva de Ventas',
+  },
+  SUPERVISOR_ALMACEN: {
+    label: 'Supervisor de Almacén',
+  },
+  CHOFER: {
+    label: 'Chofer',
+  },
+  ATENCION_CLIENTE: {
+    label: 'Atención al Cliente',
+  },
+  ASISTENTE_ADMINISTRATIVO: {
+    label: 'Asistente Administrativo',
+  },
+  CLIENTE: {
+    label: 'Cliente',
+  }
+} as const;
 export const sampleEmpleados: Empleado[] = [
   // ... tus datos de ejemplo aquí
 ];

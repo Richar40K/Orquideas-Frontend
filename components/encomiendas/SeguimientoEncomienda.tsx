@@ -1,66 +1,76 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Clock, Truck, CheckCircle, CheckSquare } from "lucide-react";
+import { Search, MapPin, Clock, Truck, CheckCircle, CheckSquare, Loader2 } from "lucide-react";
 
-type EstadoEncomienda = "REGISTRADA" | "EN_TRANSITO" | "EN_DESTINO" | "ENTREGADA";
-
+type EstadoEncomienda = "PENDIENTE" | "CONFIRMADO" | "PAGADO" | "ENVIADO" | "ENTREGADO";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API;
 interface Encomienda {
-  codigo: string;
-  remitente: string;
-  destinatario: string;
+  id: number;
+  user: {
+    id: number;
+    name: string;
+    lastName: string;
+    email: string;
+    cellPhone: string;
+  };
+  tipo: string;
   origen: string;
   destino: string;
+  dniDestino: string;
+  nombreDestino: string;
+  apellidoDestino: string;
   estado: EstadoEncomienda;
-  fechaRegistro: string;
-  fechaEstimada: string;
-  tipo: string;
+  codigo: string;
   precio: number;
-  tracking: {
-    fecha: string;
-    ubicacion: string;
-    estado: EstadoEncomienda;
-  }[];
+  clave: string;
 }
 
 export default function SeguimientoEncomienda() {
   const [codigo, setCodigo] = useState("");
   const [encomienda, setEncomienda] = useState<Encomienda | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const estadosInfo = {
-    REGISTRADA: { label: "Registrada", color: "bg-blue-500", icon: <CheckSquare className="w-4 h-4" /> },
-    EN_TRANSITO: { label: "En Tránsito", color: "bg-yellow-500", icon: <Truck className="w-4 h-4" /> },
-    EN_DESTINO: { label: "En Destino", color: "bg-orange-500", icon: <MapPin className="w-4 h-4" /> },
-    ENTREGADA: { label: "Entregada", color: "bg-green-500", icon: <CheckCircle className="w-4 h-4" /> },
+    PENDIENTE: { label: "Pendiente", color: "bg-gray-500", icon: <CheckSquare className="w-4 h-4" /> },
+    CONFIRMADO: { label: "Confirmado", color: "bg-blue-500", icon: <CheckSquare className="w-4 h-4" /> },
+    PAGADO: { label: "Pagado", color: "bg-indigo-500", icon: <CheckSquare className="w-4 h-4" /> },
+    ENVIADO: { label: "Enviado", color: "bg-yellow-500", icon: <Truck className="w-4 h-4" /> },
+    ENTREGADO: { label: "Entregado", color: "bg-green-500", icon: <CheckCircle className="w-4 h-4" /> },
   };
 
   const handleBuscar = async () => {
-    if (!codigo) return;
-    
+    if (!codigo) {
+      setError("Por favor, ingrese un código de encomienda.");
+      setEncomienda(null);
+      return;
+    }
+
     setLoading(true);
-    // Simular llamada a API
-    setTimeout(() => {
-      setEncomienda({
-        codigo: codigo,
-        remitente: "Juan Pérez",
-        destinatario: "María González",
-        origen: "Lima",
-        destino: "Arequipa",
-        estado: "EN_TRANSITO",
-        fechaRegistro: "2025-07-10",
-        fechaEstimada: "2025-07-15",
-        tipo: "CAJA_M",
-        precio: 20,
-        tracking: [
-          { fecha: "2025-07-10 09:00", ubicacion: "Lima - Oficina Central", estado: "REGISTRADA" },
-          { fecha: "2025-07-10 14:30", ubicacion: "Lima - En ruta", estado: "EN_TRANSITO" },
-          { fecha: "2025-07-11 08:00", ubicacion: "Huancayo - Centro de distribución", estado: "EN_TRANSITO" },
-          { fecha: "2025-07-12 10:30", ubicacion: "Arequipa - En ruta de entrega", estado: "EN_DESTINO" },
-        ]
-      });
+    setError(null);
+    setEncomienda(null);
+
+    try {
+      // Realizar la búsqueda usando el código directamente
+      const response = await fetch(`${API_BASE_URL}/encomiendas/code/${codigo}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Encomienda no encontrada.");
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al buscar la encomienda.");
+      }
+
+      const data: Encomienda = await response.json();
+      setEncomienda(data);
+
+    } catch (err: any) {
+      setError(err.message || "Ocurrió un error inesperado al buscar la encomienda.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -78,7 +88,7 @@ export default function SeguimientoEncomienda() {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Ingrese el código de encomienda (ej: ENC-2025-001)"
+              placeholder="Ingrese el código de encomienda (ej: ORQ-2025-001)"
               value={codigo}
               onChange={(e) => setCodigo(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 text-lg"
@@ -88,19 +98,25 @@ export default function SeguimientoEncomienda() {
             onClick={handleBuscar}
             disabled={loading || !codigo}
             className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2
-              ${loading || !codigo 
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+              ${loading || !codigo
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl"}
             `}
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <Search className="w-5 h-5" />
             )}
             {loading ? "Buscando..." : "Buscar"}
           </button>
         </div>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+            <strong className="font-bold">Error: </strong>
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
       </div>
 
       {encomienda && (
@@ -109,30 +125,33 @@ export default function SeguimientoEncomienda() {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">Encomienda #{encomienda.codigo}</h3>
-                <p className="text-gray-600">Registrada el {encomienda.fechaRegistro}</p>
+                <p className="text-gray-600">Registrada por: {encomienda.user.name || "Nombre no disponible"} {encomienda.user.lastName || "Apellido no disponible"}</p>
               </div>
               <div className={`px-4 py-2 rounded-full text-white font-medium flex items-center gap-2 ${estadosInfo[encomienda.estado].color}`}>
                 {estadosInfo[encomienda.estado].icon}
                 {estadosInfo[encomienda.estado].label}
               </div>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-700 mb-2">Remitente</h4>
-                <p className="text-sm text-gray-600">{encomienda.remitente}</p>
-                <p className="text-sm text-gray-600">{encomienda.origen}</p>
+                <p className="text-sm text-gray-600">ID: {encomienda.user.id}</p>
+                <p className="text-sm text-gray-600">Email: {encomienda.user.email}</p>
+                <p className="text-sm text-gray-600">Teléfono: {encomienda.user.cellPhone || "Teléfono no disponible"}</p>
+                <p className="text-sm text-gray-600">Origen: {encomienda.origen}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-700 mb-2">Destinatario</h4>
-                <p className="text-sm text-gray-600">{encomienda.destinatario}</p>
-                <p className="text-sm text-gray-600">{encomienda.destino}</p>
+                <p className="text-sm text-gray-600">{encomienda.nombreDestino} {encomienda.apellidoDestino}</p>
+                <p className="text-sm text-gray-600">DNI: {encomienda.dniDestino}</p>
+                <p className="text-sm text-gray-600">Destino: {encomienda.destino}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-700 mb-2">Detalles</h4>
                 <p className="text-sm text-gray-600">Tipo: {encomienda.tipo}</p>
                 <p className="text-sm text-gray-600">Precio: S/ {encomienda.precio}</p>
-                <p className="text-sm text-gray-600">Est. entrega: {encomienda.fechaEstimada}</p>
+                <p className="text-sm text-gray-600">Clave: {encomienda.clave}</p>
               </div>
             </div>
           </div>
@@ -140,25 +159,24 @@ export default function SeguimientoEncomienda() {
           <div>
             <h4 className="font-semibold text-gray-700 mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Historial de Seguimiento
+              Historial de Seguimiento (Simulado)
             </h4>
             <div className="space-y-4">
-              {encomienda.tracking.map((item: any, index: number) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className={`w-3 h-3 rounded-full ${estadosInfo[item.estado as EstadoEncomienda].color}`}></div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">{item.ubicacion}</p>
-                    <p className="text-sm text-gray-600">{item.fecha}</p>
-                  </div>
-                  <div className={`px-3 py-1 rounded-full text-white text-sm ${estadosInfo[item.estado as EstadoEncomienda].color}`}>
-                    {estadosInfo[item.estado as EstadoEncomienda].label}
-                  </div>
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className={`w-3 h-3 rounded-full ${estadosInfo[encomienda.estado].color}`}></div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">Estado Actual: {estadosInfo[encomienda.estado].label}</p>
+                  <p className="text-sm text-gray-600">Última actualización: {new Date().toLocaleString()}</p>
                 </div>
-              ))}
+                <div className={`px-3 py-1 rounded-full text-white text-sm ${estadosInfo[encomienda.estado].color}`}>
+                  {estadosInfo[encomienda.estado].label}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

@@ -1,3 +1,168 @@
+// viajes/components/viajes/TripSearchBar.tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { ArrowLeftRight } from "lucide-react";
+import { Ruta } from "./interfaces"; // Importa la interfaz Ruta
+
+const inputStyle = "appearance-none bg-white text-gray-800 px-4 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-300 transition w-full sm:w-40";
+
+interface TripSearchBarProps {
+  onSearch: (origen: string, destino: string, fecha: string) => void;
+  rutas: Ruta[]; // Recibe las rutas del contenedor
+  isLoading: boolean; // Recibe el estado de carga de la búsqueda
+}
+
+export default function TripSearchBar({ onSearch, rutas, isLoading }: TripSearchBarProps) {
+  const [origin, setOrigin] = useState<string>("");
+  const [destination, setDestination] = useState<string>("");
+  const [date, setDate] = useState<string>("");
+  const [minDate, setMinDate] = useState<string>("");
+  const [maxDate, setMaxDate] = useState<string>("");
+
+  // Inicializar origen, destino y fechas cuando las rutas estén disponibles
+  useEffect(() => {
+    if (rutas.length > 0) {
+      const origins = Array.from(new Set(rutas.map(ruta => ruta.origen)));
+      if (origins.length > 0 && !origin) { // Solo inicializa si no hay un origen ya seleccionado
+        setOrigin(origins[0]);
+      }
+
+      // Si ya hay un origen, inicializa el destino
+      if (origin) {
+        const firstOriginDests = rutas
+          .filter(r => r.origen === origin)
+          .map(r => r.destino);
+        if (firstOriginDests.length > 0 && !destination) { // Solo inicializa si no hay un destino ya seleccionado
+          setDestination(firstOriginDests[0]);
+        }
+      } else if (origins.length > 0) { // Si no hay origen, toma el primero y su primer destino
+        const firstOriginDests = rutas
+          .filter(r => r.origen === origins[0])
+          .map(r => r.destino);
+        if (firstOriginDests.length > 0) {
+          setDestination(firstOriginDests[0]);
+        }
+      }
+
+      // Configurar rango de fechas (hoy hasta fin de mes)
+      const today = new Date();
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      
+      setMinDate(today.toISOString().split('T')[0]);
+      setMaxDate(lastDayOfMonth.toISOString().split('T')[0]);
+      if (!date) { // Solo inicializa la fecha si no hay una ya seleccionada
+        setDate(today.toISOString().split('T')[0]);
+      }
+    }
+  }, [rutas, origin, destination, date]); // Dependencias para re-inicializar si cambian las rutas o si los estados están vacíos
+
+  // Obtener destinos disponibles para el origen seleccionado
+  const getDestinationsForOrigin = (selectedOrigin: string): string[] => {
+    return Array.from(
+      new Set(
+        rutas
+          .filter(ruta => ruta.origen === selectedOrigin)
+          .map(ruta => ruta.destino)
+      )
+    );
+  };
+
+  const handleOriginChange = (value: string) => {
+    setOrigin(value);
+    const newDestinations = getDestinationsForOrigin(value);
+    setDestination(newDestinations[0] || ""); // Establece el primer destino disponible para el nuevo origen
+  };
+
+  const swapLocations = () => {
+    const reverseExists = rutas.some(r => 
+      r.origen === destination && r.destino === origin
+    );
+    
+    if (reverseExists) {
+      const temp = origin;
+      setOrigin(destination);
+      setDestination(temp);
+    } else {
+      alert("No existe ruta directa en sentido inverso");
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (origin && destination && date) {
+      onSearch(origin, destination, date); // Llama a la función onSearch del contenedor
+    }
+  };
+
+  return (
+    <div className="bg-blue-900 p-6 rounded-2xl max-w-4xl mx-auto shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center items-center">
+        {/* Origen */}
+        <div className="w-full sm:w-auto">
+          <select
+            value={origin}
+            onChange={(e) => handleOriginChange(e.target.value)}
+            className={inputStyle}
+            disabled={isLoading}
+          >
+            {Array.from(new Set(rutas.map(r => r.origen))).map((city) => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Botón de intercambio */}
+        <button
+          onClick={swapLocations}
+          className="bg-yellow-400 hover:bg-yellow-300 text-black rounded-full p-2 shadow-md transition"
+          title="Intercambiar"
+          disabled={isLoading}
+        >
+          <ArrowLeftRight className="w-5 h-5" />
+        </button>
+
+        {/* Destino */}
+        <div className="w-full sm:w-auto">
+          <select
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            className={inputStyle}
+            disabled={!origin || isLoading}
+          >
+            {getDestinationsForOrigin(origin).map((city) => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Fecha */}
+        <div className="w-full sm:w-auto">
+          <input
+            type="date"
+            value={date}
+            min={minDate}
+            max={maxDate}
+            onChange={(e) => setDate(e.target.value)}
+            className={`${inputStyle} text-black`}
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Botón de búsqueda */}
+        <button
+          onClick={handleSearchClick}
+          disabled={!origin || !destination || !date || isLoading}
+          className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-semibold px-6 py-2 rounded-xl shadow-md transition w-full sm:w-auto"
+        >
+          {isLoading ? "Buscando..." : "🔍 Buscar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+/*
 "use client";
 
 import { useState } from "react";
@@ -61,7 +226,6 @@ export default function TripSearchBar() {
           <ArrowLeftRight className="w-5 h-5" />
         </button>
 
-        {/* Destino */}
         <div className="w-full sm:w-auto">
           <select
             value={destination}
@@ -93,3 +257,4 @@ export default function TripSearchBar() {
     </div>
   );
 }
+*/

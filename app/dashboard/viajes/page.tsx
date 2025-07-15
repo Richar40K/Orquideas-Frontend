@@ -1,11 +1,11 @@
 "use client"
-import React, { useState } from 'react';
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Users, 
-  Bus, 
+import React, { useState, useEffect } from 'react';  
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Bus,
   User,
   Plus,
   Edit3,
@@ -16,6 +16,63 @@ import {
   Download
 } from 'lucide-react';
 
+ 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API;
+
+ 
+interface Ruta {
+  id: string;
+  origen: string;
+  destino: string;
+  duracion: string;  
+  distance: number;
+}
+
+interface Conductor {
+  id: string;
+  name: string;
+  lastName: string;
+   
+}
+
+interface Bus {
+  id: string;
+  placa: string;  
+  modelo: string;  
+  capacidad: number;
+  estado: string;  
+}
+
+ 
+interface CrearViajeDTO {
+  busId: string;
+  userId: string;
+  rutaId: string;
+  fechaSalida: string;  
+  horaSalida: string;  
+  fechaLlegada: string;  
+  horaLLegada: string;  
+  precio: number;
+}
+
+ 
+interface ViajeRespuestaDTO {
+  id: string;
+  origen: string;
+  destino: string;
+  fechaSalida: string;
+  horaSalida: string;
+  fechaLlegada: string;
+  horaLLegada: string;
+  busId: string;
+  userId: string;
+  nombreChofer: string;
+  apellidoChofer: string;
+  estado: 'PROGRAMADO' | 'EN_CURSO' | 'COMPLETADO';  
+  precio: number;
+}
+
+ 
 interface Viaje {
   id: string;
   salida: string;
@@ -26,88 +83,29 @@ interface Viaje {
   origen: string;
   destino: string;
   conductor: string;
-  pasajeros: number;
+  pasajeros: number;  
   capacidad: number;
-  estado: 'programado' | 'en_curso' | 'completado' | 'cancelado';
+  estado: 'programado' | 'en_curso' | 'completado';  
 }
+
 
 const ViajesAdministration = () => {
   const [fechaSalida, setFechaSalida] = useState('');
   const [fechaLlegada, setFechaLlegada] = useState('');
   const [horaSalida, setHoraSalida] = useState('');
   const [horaLlegada, setHoraLlegada] = useState('');
+  const [precio, setPrecio] = useState<number | ''>('');  
   const [rutaSeleccionada, setRutaSeleccionada] = useState('');
   const [conductorSeleccionado, setConductorSeleccionado] = useState('');
   const [busSeleccionado, setBusSeleccionado] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Datos de ejemplo
-  const viajes: Viaje[] = [
-    {
-      id: 'V001',
-      salida: '2024-07-05',
-      llegada: '2024-07-05',
-      horaSalida: '08:00',
-      horaLlegada: '16:00',
-      placa: 'ABC-123',
-      origen: 'Lima',
-      destino: 'Arequipa',
-      conductor: 'Carlos Mendoza',
-      pasajeros: 42,
-      capacidad: 45,
-      estado: 'programado'
-    },
-    {
-      id: 'V002',
-      salida: '2024-07-05',
-      llegada: '2024-07-05',
-      horaSalida: '14:30',
-      horaLlegada: '20:00',
-      placa: 'XYZ-789',
-      origen: 'Arequipa',
-      destino: 'Cusco',
-      conductor: 'María Rodriguez',
-      pasajeros: 38,
-      capacidad: 40,
-      estado: 'en_curso'
-    },
-    {
-      id: 'V003',
-      salida: '2024-07-04',
-      llegada: '2024-07-04',
-      horaSalida: '06:00',
-      horaLlegada: '12:30',
-      placa: 'DEF-456',
-      origen: 'Lima',
-      destino: 'Trujillo',
-      conductor: 'José Vásquez',
-      pasajeros: 35,
-      capacidad: 35,
-      estado: 'completado'
-    }
-  ];
-
-  const rutas = [
-    { id: 'lima-arequipa', nombre: 'Lima - Arequipa', duracion: '8h' },
-    { id: 'arequipa-cusco', nombre: 'Arequipa - Cusco', duracion: '5h 30m' },
-    { id: 'lima-trujillo', nombre: 'Lima - Trujillo', duracion: '6h 30m' },
-    { id: 'cusco-puno', nombre: 'Cusco - Puno', duracion: '6h' }
-  ];
-
-  const conductores = [
-    { id: 'c001', nombre: 'Carlos Mendoza', licencia: 'A-III' },
-    { id: 'c002', nombre: 'María Rodriguez', licencia: 'A-III' },
-    { id: 'c003', nombre: 'José Vásquez', licencia: 'A-III' },
-    { id: 'c004', nombre: 'Ana Torres', licencia: 'A-III' }
-  ];
-
-  const buses = [
-    { id: 'b001', placa: 'ABC-123', modelo: 'Mercedes Benz', capacidad: 45 },
-    { id: 'b002', placa: 'XYZ-789', modelo: 'Volvo', capacidad: 40 },
-    { id: 'b003', placa: 'DEF-456', modelo: 'Scania', capacidad: 35 },
-    { id: 'b004', placa: 'GHI-321', modelo: 'Mercedes Benz', capacidad: 50 }
-  ];
-
+   
+  const [viajes, setViajes] = useState<Viaje[]>([]);
+  const [rutas, setRutas] = useState<Ruta[]>([]);
+  const [conductores, setConductores] = useState<Conductor[]>([]);
+  const [buses, setBuses] = useState<Bus[]>([]);
+   
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'programado': return 'bg-blue-100 text-blue-800';
@@ -117,11 +115,154 @@ const ViajesAdministration = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+         
+        const busesRes = await fetch(`${API_BASE_URL}/bus`);
+        if (!busesRes.ok) throw new Error('Error al cargar buses');
+        const busesData: Bus[] = await busesRes.json();
+        setBuses(busesData);
 
-  const handleSubmit = () => {
-    // Lógica para crear viaje
-    console.log('Creando viaje...');
+         
+        await fetchViajes();
+
+         
+        const [rutasRes, choferesRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/rutas`),
+          fetch(`${API_BASE_URL}/users/choferes`)
+        ]);
+
+        if (!rutasRes.ok) throw new Error('Error al cargar rutas');
+        if (!choferesRes.ok) throw new Error('Error al cargar choferes');
+
+        const rutasData: Ruta[] = await rutasRes.json();
+        const choferesData: Conductor[] = await choferesRes.json();
+
+        setRutas(rutasData);
+        setConductores(choferesData);
+
+      } catch (error) {
+        console.error('Error al cargar datos iniciales:', error);
+        alert('Hubo un error al cargar los datos iniciales. Por favor, inténtalo de nuevo.');
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const mapBackendStateToFrontend = (backendState: string) => {
+    switch (backendState) {
+      case 'PROGRAMADO': return 'programado';
+      case 'EN_CURSO': return 'en_curso';
+      case 'COMPLETADO': return 'completado';
+      default: return 'programado'; 
+    }
   };
+  const fetchViajes = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/viajes`);
+      if (!response.ok) throw new Error('Error al cargar viajes');
+      const data: ViajeRespuestaDTO[] = await response.json();
+
+       
+      if (buses.length === 0) {
+        const busesRes = await fetch(`${API_BASE_URL}/bus`);
+        if (!busesRes.ok) throw new Error('Error al cargar buses');
+        const busesData: Bus[] = await busesRes.json();
+        setBuses(busesData);
+      }
+
+      const transformedViajes: Viaje[] = data.map(v => {
+         
+        const busInfo = buses.find(b => b.id === v.busId) ||
+          (buses.length > 0 ? buses.find(b => b.id === v.busId) : null);
+
+        const placa = busInfo ? busInfo.placa : 'N/A';
+        const capacidad = busInfo ? busInfo.capacidad : 0;
+
+        return {
+          id: v.id,
+          salida: v.fechaSalida,
+          llegada: v.fechaLlegada,
+          horaSalida: v.horaSalida,
+          horaLlegada: v.horaLLegada,
+          placa: placa,
+          origen: v.origen,
+          destino: v.destino,
+          conductor: `${v.nombreChofer || ''} ${v.apellidoChofer || ''}`.trim(),
+          pasajeros: 0,
+          capacidad: capacidad,
+          estado: mapBackendStateToFrontend(v.estado),
+        };
+      });
+      setViajes(transformedViajes);
+    } catch (error) {
+      console.error('Error al cargar los viajes:', error);
+      alert('Hubo un error al cargar los viajes.');
+    }
+  };
+
+  const handleSubmit = async () => {
+     
+    if (!fechaSalida || !horaSalida || !fechaLlegada || !horaLlegada || !rutaSeleccionada || !conductorSeleccionado || !busSeleccionado || precio === '') {
+      alert('Por favor, completa todos los campos.');
+      return;
+    }
+
+    const newViaje: CrearViajeDTO = {
+      busId: busSeleccionado,
+      userId: conductorSeleccionado,
+      rutaId: rutaSeleccionada,
+      fechaSalida: fechaSalida,
+      horaSalida: `${horaSalida}:00`,
+      fechaLlegada: fechaLlegada,
+      horaLLegada: `${horaLlegada}:00`,
+      precio: Number(precio),
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/viajes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+           
+           
+           
+        },
+        body: JSON.stringify(newViaje),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al crear el viaje');
+      }
+
+      const createdViaje: ViajeRespuestaDTO = await response.json();
+      alert('Viaje creado exitosamente!');
+      console.log('Viaje creado:', createdViaje);
+
+       
+      await fetchViajes();
+
+       
+      setFechaSalida('');
+      setFechaLlegada('');
+      setHoraSalida('');
+      setHoraLlegada('');
+      setPrecio('');
+      setRutaSeleccionada('');
+      setConductorSeleccionado('');
+      setBusSeleccionado('');
+
+    } catch (error: any) {
+      console.error('Error al crear el viaje:', error);
+      alert(`Error al crear el viaje: ${error.message || 'Ocurrió un error inesperado.'}`);
+    }
+  };
+
+   
+
 
   return (
     <div className="space-y-6">
@@ -212,6 +353,21 @@ const ViajesAdministration = () => {
             </div>
           </div>
 
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Precio
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={precio}
+              onChange={(e) => setPrecio(Number(e.target.value))}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              required
+            />
+          </div>
+
           {/* Selecciones */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -228,7 +384,7 @@ const ViajesAdministration = () => {
                 <option value="">Selecciona una ruta</option>
                 {rutas.map(ruta => (
                   <option key={ruta.id} value={ruta.id}>
-                    {ruta.nombre} ({ruta.duracion})
+                    {ruta.origen} - {ruta.destino} ({ruta.duracion ? ruta.duracion.substring(0, 5) : 'N/A'}) {/* Formatear duración si es necesario */}
                   </option>
                 ))}
               </select>
@@ -248,12 +404,11 @@ const ViajesAdministration = () => {
                 <option value="">Selecciona un conductor</option>
                 {conductores.map(conductor => (
                   <option key={conductor.id} value={conductor.id}>
-                    {conductor.nombre} - {conductor.licencia}
+                    {conductor.name} {conductor.lastName}
                   </option>
                 ))}
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 <Bus className="w-4 h-4 inline mr-1" />
@@ -327,6 +482,7 @@ const ViajesAdministration = () => {
                 <th className="text-left px-6 py-4 text-sm font-semibold text-slate-700">ACCIONES</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-slate-200/60">
               {viajes.map((viaje) => (
                 <tr key={viaje.id} className="hover:bg-slate-50/50 transition-colors">
@@ -345,29 +501,34 @@ const ViajesAdministration = () => {
                       </span>
                     </div>
                   </td>
+
                   <td className="px-6 py-4 text-sm text-slate-700">
                     <div className="flex flex-col gap-1">
                       <span className="font-medium">{viaje.origen}</span>
                       <span className="text-slate-500">→ {viaje.destino}</span>
                     </div>
                   </td>
+
                   <td className="px-6 py-4 text-sm text-slate-700">
                     <div className="flex flex-col gap-1">
                       <span className="font-medium">{viaje.conductor}</span>
                       <span className="text-slate-500">{viaje.placa}</span>
                     </div>
                   </td>
+
                   <td className="px-6 py-4 text-sm text-slate-700">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-slate-400" />
                       <span className="font-medium">{viaje.pasajeros}/{viaje.capacidad}</span>
                     </div>
                   </td>
+
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getEstadoColor(viaje.estado)}`}>
                       {viaje.estado.replace('_', ' ')}
                     </span>
                   </td>
+
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
