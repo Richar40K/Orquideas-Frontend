@@ -10,6 +10,18 @@ interface EmpleadoDetailsModalProps {
 export const EmpleadoDetailsModal = ({ empleado, onClose }: EmpleadoDetailsModalProps) => {
   if (!empleado) return null;
 
+  const getSafeConfigValue = (value: string, config: any) => {
+    const lowerValue = value?.toLowerCase() || '';
+    return config[lowerValue as keyof typeof config] || { 
+      label: value, 
+      color: 'bg-gray-100 text-gray-800 border-gray-200', 
+      icon: '❓' 
+    };
+  };
+
+  const departmentInfo = getSafeConfigValue(empleado.department, departmentConfig);
+  const statusInfo = getSafeConfigValue(empleado.status, statusConfig);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -19,13 +31,14 @@ export const EmpleadoDetailsModal = ({ empleado, onClose }: EmpleadoDetailsModal
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Cerrar modal"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Información Personal */}
+            {/* Sección de Información Personal */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Información Personal</h3>
               <div className="space-y-4">
@@ -70,57 +83,50 @@ export const EmpleadoDetailsModal = ({ empleado, onClose }: EmpleadoDetailsModal
                   <label className="block text-sm font-medium text-gray-700">Dirección</label>
                   <div className="flex items-center">
                     <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                    <p className="text-sm text-gray-900">{empleado.address}</p>
+                    <p className="text-sm text-gray-900">{empleado.address || 'No especificada'}</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Información Laboral */}
+            {/* Sección de Información Laboral */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Información Laboral</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Departamento</label>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${departmentConfig[empleado.department].color}`}>
-                      {departmentConfig[empleado.department].icon} {departmentConfig[empleado.department].label}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${departmentInfo.color}`}>
+                      {departmentInfo.icon} {departmentInfo.label}
                     </span>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Estado</label>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[empleado.status].color}`}>
-                      {statusConfig[empleado.status].icon} {statusConfig[empleado.status].label}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusInfo.color}`}>
+                      {statusInfo.icon} {statusInfo.label}
                     </span>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Fecha de Contratación</label>
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                      <p className="text-sm text-gray-900">{empleado.hireDate}</p>
-                    </div>
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-700">Salario</label>
-                    <p className="text-sm font-semibold text-gray-900">S/ {empleado.salary.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-gray-900">S/ {empleado.salary?.toLocaleString() || 'No especificado'}</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Contacto de Emergencia */}
+            {/* Sección de Contacto de Emergencia */}
             <div className="lg:col-span-2">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Contacto de Emergencia</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
-                  <p className="text-sm text-gray-900">{empleado.emergencyContact}</p>
+                  <p className="text-sm text-gray-900">{empleado.nameEmergency || 'No especificado'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Teléfono</label>
                   <div className="flex items-center">
                     <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                    <p className="text-sm text-gray-900">{empleado.emergencyPhone}</p>
+                    <p className="text-sm text-gray-900">{empleado.phoneEmergency || 'No especificado'}</p>
                   </div>
                 </div>
               </div>
