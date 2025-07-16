@@ -38,21 +38,21 @@ export default function DetalleViajePage() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const apiUrl = process.env.NEXT_PUBLIC_API;
-        
+
         const viajeResponse = await fetch(`${apiUrl}/viajes/${params.id}`);
         if (!viajeResponse.ok) {
           throw new Error(`Error al obtener datos del viaje: ${viajeResponse.status}`);
         }
         const viajeData = await viajeResponse.json();
-        
+
         const asientosResponse = await fetch(`${apiUrl}/viajes/${params.id}/asientos`);
         if (!asientosResponse.ok) {
           throw new Error(`Error al obtener asientos: ${asientosResponse.status}`);
         }
         const asientosData = await asientosResponse.json();
-        
+
         setViaje(viajeData);
         setAsientos(asientosData);
       } catch (e: any) {
@@ -84,6 +84,7 @@ export default function DetalleViajePage() {
       const userId = userResponse.data.id;
 
       // Crear el objeto de pago
+      // Crear el objeto de pago
       const paymentData = {
         userId: userId,
         viajeId: parseInt(viaje.id), // Convertir string a number
@@ -92,14 +93,25 @@ export default function DetalleViajePage() {
 
       // Enviar la solicitud de pago
       const paymentResponse = await axios.post(`${apiUrl}/pagos/viaje`, paymentData);
-      
+
+      // Redirigir a Mercado Pago si hay init_point
       if (paymentResponse.data.mpInitPoint) {
-        // Abrir nueva pestaña con MercadoPago
-        window.location.href = paymentResponse.data.mpInitPoint;
-        
-        // Recargar la página de encomiendas
+        // Abrir MercadoPago en nueva pestaña
+        const mpWindow = window.open(paymentResponse.data.mpInitPoint, '_blank');
+
+        // Redirigir la página actual a mis-viajes
         window.location.href = '/cliente/viajes';
 
+        // Enfocar la nueva pestaña si se abrió correctamente
+        if (mpWindow) {
+          mpWindow.focus();
+        } else {
+          // Si el navegador bloqueó el popup, ofrecer alternativa
+          alert("Por favor habilite popups y haga clic en este enlace para pagar: " + paymentResponse.data.mpInitPoint);
+        }
+      } else {
+        alert("Pago procesado correctamente. Redirigiendo a mis viajes...");
+        window.location.href = '/mis-viajes'; // Recarga completa en lugar de router.push
       }
 
     } catch (e: any) {
@@ -169,12 +181,12 @@ export default function DetalleViajePage() {
                   ${ocupado
                     ? "bg-gray-300 text-gray-400 border-gray-400 cursor-not-allowed"
                     : seleccionado
-                    ? "bg-yellow-400 border-yellow-500 text-blue-900 shadow-lg scale-105"
-                    : "bg-white border-blue-200 hover:bg-blue-100 hover:border-blue-500 text-blue-700"}
+                      ? "bg-yellow-400 border-yellow-500 text-blue-900 shadow-lg scale-105"
+                      : "bg-white border-blue-200 hover:bg-blue-100 hover:border-blue-500 text-blue-700"}
                 `}
                 aria-label={`Asiento ${asiento.numero} ${ocupado ? "ocupado" : seleccionado ? "seleccionado" : "disponible"}`}
               >
-                {ocupado ? <User  className="w-6 h-6" /> : seleccionado ? <Check className="w-6 h-6" /> : asiento.numero}
+                {ocupado ? <User className="w-6 h-6" /> : seleccionado ? <Check className="w-6 h-6" /> : asiento.numero}
               </button>
             );
           })}
