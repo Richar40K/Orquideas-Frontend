@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { User, Bus, Package, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ChevronRight, Calendar, MapPin, Clock, Star } from "lucide-react";
 import { getUserFromToken } from "@/utils/getUserFromToken";
 import { AxiosError } from 'axios';
-import Link from "next/link";
 import axios from "axios";
+import Link from "next/link";
 
 const menu = [
-  { key: "viajes", label: "Mis Viajes", icon: Bus, color: "bg-blue-500", count: 3 },
-  { key: "encomiendas", label: "Mis Encomiendas", icon: Package, color: "bg-green-500", count: 2 },
+  { key: "viajes", label: "Mis Viajes", icon: Bus, color: "bg-blue-500", },
+  { key: "encomiendas", label: "Mis Encomiendas", icon: Package, color: "bg-green-500",  },
   { key: "configuracion", label: "Configuración", icon: Settings, color: "bg-purple-500" },
 ];
 
@@ -62,7 +62,7 @@ export default function PerfilConfigPage() {
 
         {/* Menú vertical */}
         <nav className="flex-1 space-y-2">
-          {menu.map(({ key, label, icon: Icon, color, count }) => (
+          {menu.map(({ key, label, icon: Icon, color,  }) => (
             <button
               key={key}
               className={`w-full group flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 relative
@@ -76,11 +76,7 @@ export default function PerfilConfigPage() {
                 <Icon className="w-4 h-4 text-white" />
               </div>
               <span>{label}</span>
-              {count && (
-                <span className="absolute right-4 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {count}
-                </span>
-              )}
+              
             </button>
           ))}
         </nav>
@@ -119,40 +115,30 @@ export default function PerfilConfigPage() {
 }
 
 function MisViajes() {
-  const viajes = [
-    {
-      id: 1,
-      origen: "Lima",
-      destino: "Arequipa",
-      fecha: "2024-07-15",
-      hora: "08:00",
-      estado: "Confirmado",
-      precio: "S/ 45.00",
-      asiento: "A12"
-    },
-    {
-      id: 2,
-      origen: "Arequipa",
-      destino: "Cusco",
-      fecha: "2024-07-20",
-      hora: "14:30",
-      estado: "Pendiente",
-      precio: "S/ 35.00",
-      asiento: "B08"
-    },
-    {
-      id: 3,
-      origen: "Cusco",
-      destino: "Lima",
-      fecha: "2024-07-25",
-      hora: "19:00",
-      estado: "Completado",
-      precio: "S/ 50.00",
-      asiento: "C15"
-    }
-  ];
+  const [viajes, setViajes] = useState([]);
 
-  return (
+  useEffect(() => {
+    const fetchViajes = async () => {
+      const username = getUserFromToken();
+      if (!username) return;
+
+      try {
+        // Obtener el userId desde el backend usando el username
+        const userRes = await axios.get(`${process.env.NEXT_PUBLIC_API}/users/username/${username}`);
+        const userId = userRes.data.id;
+
+        // Llamar al endpoint de pagos aprobados por usuario
+        const pagosRes = await axios.get(`${process.env.NEXT_PUBLIC_API}/pagos/viaje/aprobados/${userId}`);
+        setViajes(pagosRes.data);
+      } catch (err) {
+        console.error("Error al obtener viajes pagados:", err);
+      }
+    };
+
+    fetchViajes();
+  }, []);
+
+   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Mis Viajes</h2>
@@ -163,19 +149,16 @@ function MisViajes() {
       </div>
 
       <div className="grid gap-4 md:gap-6">
-        {viajes.map((viaje) => (
-          <div key={viaje.id} className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow hover:shadow-md transition-all duration-300 p-4 md:p-6 border border-white/50">
+        {viajes.map((viaje: any) => (
+          <div key={viaje.pagoId} className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow hover:shadow-md transition-all duration-300 p-4 md:p-6 border border-white/50">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
                   <div className="flex items-center gap-2 text-lg font-semibold text-slate-900">
                     <MapPin className="w-5 h-5 text-blue-500" />
-                    <span className="text-sm sm:text-base">{viaje.origen} → {viaje.destino}</span>
+                    <span className="text-sm sm:text-base">{viaje.viaje.ruta?.origen || 'Origen'} → {viaje.viaje.ruta?.destino || 'Destino'}</span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${viaje.estado === 'Confirmado' ? 'bg-green-100 text-green-800' :
-                    viaje.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {viaje.estado}
                   </span>
                 </div>
@@ -183,26 +166,20 @@ function MisViajes() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
                   <div className="flex items-center gap-2 text-slate-600">
                     <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {viaje.fecha}
+                    {viaje.viaje.fechaSalida}
                   </div>
                   <div className="flex items-center gap-2 text-slate-600">
                     <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {viaje.hora}
+                    {viaje.viaje.horaSalida}
                   </div>
                   <div className="flex items-center gap-2 text-slate-600">
                     <User className="w-3 h-3 sm:w-4 sm:h-4" />
                     Asiento {viaje.asiento}
                   </div>
                   <div className="flex items-center gap-2 font-semibold text-green-600">
-                    <span>{viaje.precio}</span>
+                    <span>S/ {viaje.monto}</span>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex justify-end md:justify-start">
-                <button className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-medium">
-                  Ver Detalles
-                </button>
               </div>
             </div>
           </div>
@@ -211,30 +188,40 @@ function MisViajes() {
     </div>
   );
 }
-
+interface EncomiendaPago {
+  pagoId: number;
+  monto: number;
+  estado: string;
+  fecha: string;
+  detalles?: string;
+  parcels: {
+    id: number;
+    tipo: string;
+    destino: string;
+    precio: number;
+  };
+}
 function MisEncomiendas() {
-  const encomiendas = [
-    {
-      id: 1,
-      codigo: "ENC001",
-      origen: "Lima",
-      destino: "Arequipa",
-      fecha: "2024-07-12",
-      peso: "2.5 kg",
-      estado: "En tránsito",
-      precio: "S/ 15.00"
-    },
-    {
-      id: 2,
-      codigo: "ENC002",
-      origen: "Arequipa",
-      destino: "Cusco",
-      fecha: "2024-07-10",
-      peso: "1.8 kg",
-      estado: "Entregado",
-      precio: "S/ 12.00"
-    }
-  ];
+  const [encomiendas, setEncomiendas] = useState<EncomiendaPago[]>([]);
+
+  useEffect(() => {
+    const fetchEncomiendas = async () => {
+      const username = getUserFromToken();
+      if (!username) return;
+
+      try {
+        const userRes = await axios.get(`${process.env.NEXT_PUBLIC_API}/users/username/${username}`);
+        const userId = userRes.data.id;
+
+        const pagosRes = await axios.get(`${process.env.NEXT_PUBLIC_API}/pagos/encomienda/aprobadas/${userId}`);
+        setEncomiendas(pagosRes.data);
+      } catch (error) {
+        console.error("Error al obtener encomiendas pagadas:", error);
+      }
+    };
+
+    fetchEncomiendas();
+  }, []);
 
   return (
     <div>
@@ -243,46 +230,43 @@ function MisEncomiendas() {
       </div>
 
       <div className="grid gap-4 md:gap-6">
-        {encomiendas.map((encomienda) => (
-          <div key={encomienda.id} className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow hover:shadow-md transition-all duration-300 p-4 md:p-6 border border-white/50">
+        {encomiendas.map((e) => (
+          <div key={e.pagoId} className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow hover:shadow-md transition-all duration-300 p-4 md:p-6 border border-white/50">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
                   <div className="flex items-center gap-2 text-lg font-semibold text-slate-900">
                     <Package className="w-5 h-5 text-green-500" />
-                    <span className="text-sm sm:text-base">{encomienda.codigo}</span>
+                    <span className="text-sm sm:text-base">ENCOM-{e.parcels.id}</span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${encomienda.estado === 'En tránsito' ? 'bg-blue-100 text-blue-800' :
-                    encomienda.estado === 'Entregado' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                    {encomienda.estado}
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {e.estado}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
                   <div className="flex items-center gap-2 text-slate-600">
                     <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {encomienda.origen} → {encomienda.destino}
+                    Destino: {e.parcels.destino}
                   </div>
                   <div className="flex items-center gap-2 text-slate-600">
                     <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {encomienda.fecha}
+                    {new Date(e.fecha).toLocaleDateString()}
                   </div>
                   <div className="flex items-center gap-2 text-slate-600">
                     <Package className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {encomienda.peso}
+                    Tipo: {e.parcels.tipo}
                   </div>
                   <div className="flex items-center gap-2 font-semibold text-green-600">
-                    <span>{encomienda.precio}</span>
+                    <span>S/ {e.monto.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end md:justify-start">
-                <button className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-medium">
+                <Link href="/cliente/encomienda" className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs sm:text-sm font-medium">
                   Rastrear
-                </button>
+                </Link>
               </div>
             </div>
           </div>
