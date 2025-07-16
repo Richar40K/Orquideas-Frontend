@@ -1,4 +1,5 @@
-import React from 'react';
+"use client"
+import React, { useEffect, useState } from 'react';
 import {
   TrendingUp,
   DollarSign,
@@ -37,33 +38,86 @@ const StatsCard = ({
   </div>
 );
 
-// Componente principal del Dashboard
+
 export default function DashboardPage() {
+  const [ventasHoy, setVentasHoy] = useState<string>("Cargando...");
+  const [pasajeros, setPasajeros] = useState<string>("Cargando...");
+  const [encomiendas, setEncomiendas] = useState<string>("Cargando...")
+  const [buses, setBuses] = useState<string>("Cargando...")
+  const [totalAprobados, setTotalAprobados] = useState<string>("Cargando...");
+  interface PopularRoute {
+  route: string;
+  trips: number;
+  percentage: number;
+}
+
+  const [popularRoutes, setPopularRoutes] = useState<PopularRoute[]>([]);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API;
+
+    // Ventas hoy
+    fetch(`${apiUrl}/pagos/total-aprobados-hoy`)
+      .then(res => res.json())
+      .then(data => setVentasHoy("S/ " + Number(data).toLocaleString("es-PE")))
+      .catch(() => setVentasHoy("Error"));
+
+    // Viajes aprobados (pasajeros)
+    fetch(`${apiUrl}/pagos/viajes-aprobados`)
+      .then(res => res.json())
+      .then(data => setPasajeros(String(data)))
+      .catch(() => setPasajeros("Error"));
+
+    // Encomiendas aprobadas
+    fetch(`${apiUrl}/pagos/encomiendas-aprobadas`)
+      .then(res => res.json())
+      .then(data => setEncomiendas(String(data)))
+      .catch(() => setEncomiendas("Error"));
+
+    // buses estado activo
+    fetch(`${apiUrl}/bus/cantidad-activos`)
+      .then(res => res.json())
+      .then(data => setBuses(String(data)))
+      .catch(() => setBuses("Error"));
+
+    fetch(`${apiUrl}/viajes/rutas-populares`)
+    .then(res => res.json())
+    .then(data => setPopularRoutes(data))
+    .catch(() => setPopularRoutes([]));
+    
+
+    fetch(`${apiUrl}/pagos/total-aprobados`)
+    .then(res => res.json())
+    .then(data => setTotalAprobados("S/ " + Number(data).toLocaleString("es-PE")))
+    .catch(() => setTotalAprobados("Error"));
+    
+
+  }, []);
   const stats = [
     { 
       label: 'Ventas Hoy', 
-      value: 'S/ 12,450', 
+      value: ventasHoy, 
       change: '+12%', 
       icon: DollarSign, 
       color: 'bg-green-500' 
     },
     { 
       label: 'Pasajeros', 
-      value: '284', 
-      change: '+8%', 
+      value: pasajeros, 
+      change: '+2%', 
       icon: UserCheck, 
       color: 'bg-blue-500' 
     },
     { 
       label: 'Encomiendas', 
-      value: '67', 
-      change: '+15%', 
+      value: encomiendas, 
+      change: '+100%', 
       icon: Package, 
       color: 'bg-purple-500' 
     },
     { 
       label: 'Buses Activos', 
-      value: '18/24', 
+      value: buses, 
       change: '75%', 
       icon: Bus, 
       color: 'bg-orange-500' 
@@ -73,7 +127,7 @@ export default function DashboardPage() {
   const recentActivity = [
     { 
       type: 'Venta', 
-      description: 'Pasaje Lima - Arequipa', 
+      description: 'Pasaje Omate - Arequipa', 
       time: 'Hace 5 min', 
       amount: 'S/ 85',
       color: 'bg-green-100 text-green-600'
@@ -94,19 +148,14 @@ export default function DashboardPage() {
     },
     { 
       type: 'Viaje', 
-      description: 'Bus partió a Cusco', 
+      description: 'Bus partió a Omate', 
       time: 'Hace 25 min', 
       amount: '32 pasajeros',
       color: 'bg-orange-100 text-orange-600'
     },
   ];
 
-  const popularRoutes = [
-    { route: 'Lima - Arequipa', trips: 85, percentage: 85 },
-    { route: 'Arequipa - Cusco', trips: 73, percentage: 73 },
-    { route: 'Lima - Trujillo', trips: 61, percentage: 61 },
-    { route: 'Cusco - Puno', trips: 49, percentage: 49 },
-  ];
+
 
   return (
     <div className="space-y-6">
@@ -135,13 +184,11 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-slate-800">Ventas del Mes</h3>
             <select className="text-sm border border-slate-200 rounded-lg px-3 py-1 bg-white">
               <option>Últimos 30 días</option>
-              <option>Últimos 7 días</option>
-              <option>Hoy</option>
             </select>
           </div>
           <div className="h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl flex items-center justify-center">
             <div className="text-center">
-              <div className="text-3xl font-bold text-slate-700 mb-2">S/ 348,500</div>
+              <div className="text-3xl font-bold text-slate-700 mb-2">{totalAprobados}</div>
               <p className="text-slate-500">Total del mes</p>
             </div>
           </div>
@@ -206,7 +253,7 @@ export default function DashboardPage() {
                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                 <span className="text-sm font-medium text-yellow-800">Mantenimiento</span>
               </div>
-              <p className="text-sm text-yellow-700">Bus #247 requiere mantenimiento</p>
+              <p className="text-sm text-yellow-700">Bus #1 requiere mantenimiento</p>
             </div>
             
             <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -214,7 +261,7 @@ export default function DashboardPage() {
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 <span className="text-sm font-medium text-red-800">Retraso</span>
               </div>
-              <p className="text-sm text-red-700">Viaje Lima-Cusco retrasado 30 min</p>
+              <p className="text-sm text-red-700">Viaje Omate-Arequipa retrasado 30 min</p>
             </div>
 
             <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
@@ -222,7 +269,7 @@ export default function DashboardPage() {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm font-medium text-green-800">Completado</span>
               </div>
-              <p className="text-sm text-green-700">Ruta Arequipa-Tacna finalizada</p>
+              <p className="text-sm text-green-700">Ruta Arequipa-Omate finalizada</p>
             </div>
           </div>
         </div>

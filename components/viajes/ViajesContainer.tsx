@@ -84,45 +84,38 @@ export default function ViajesContainer() {
 
      
     const handleSearch = async (origen: string, destino: string, fecha: string) => {
-        try {
-            setIsLoadingSearch(true);
-            setSearchError(null);
-            const apiUrl = process.env.NEXT_PUBLIC_API;
+    try {
+        setIsLoadingSearch(true);
+        setSearchError(null);
+        const apiUrl = process.env.NEXT_PUBLIC_API;
 
-             
-             
-             
-             
-             
-            const queryParams = new URLSearchParams();
-            if (origen) queryParams.append('origen', origen);
-            if (destino) queryParams.append('destino', destino);
-            if (fecha) queryParams.append('fecha', fecha);
-
-            const response = await fetch(`${apiUrl}/viajes?${queryParams.toString()}`);
-            const data: ViajeBackend[] = await response.json();
-
-            console.log("Parámetros enviados:", { origen, destino, fecha });
-            console.log("Datos recibidos:", data);  
-
-             
-            const filteredData = data.filter(viaje =>
-                (!origen || viaje.origen === origen) &&
-                (!destino || viaje.destino === destino) &&
-                (!fecha || viaje.fechaSalida.includes(fecha))  
-            );
-
-
-            setFilteredViajes(mapBackendToFrontendViajes(filteredData));
-            setHasSearched(true);
-        } catch (e: any) {
-            console.error("Error searching trips:", e);
-            setSearchError(e.message || "No se pudieron cargar los viajes. Inténtalo de nuevo más tarde.");
-            setFilteredViajes([]);  
-        } finally {
-            setIsLoadingSearch(false);
+        // Construye la URL para /viajes/programados
+        let url = `${apiUrl}/viajes/programados`;
+        if (fecha) {
+            // Si hay fecha seleccionada, agrega el query param
+            url += `?fecha=${fecha}`;
         }
-    };
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data: ViajeBackend[] = await response.json();
+
+        // Filtra por origen y destino en el front
+        const filteredData = data.filter(viaje =>
+            (!origen || viaje.origen === origen) &&
+            (!destino || viaje.destino === destino)
+        );
+
+        setFilteredViajes(mapBackendToFrontendViajes(filteredData));
+        setHasSearched(true);
+    } catch (e: any) {
+        console.error("Error searching trips:", e);
+        setSearchError(e.message || "No se pudieron cargar los viajes. Inténtalo de nuevo más tarde.");
+        setFilteredViajes([]);
+    } finally {
+        setIsLoadingSearch(false);
+    }
+};
 
      
     useEffect(() => {
