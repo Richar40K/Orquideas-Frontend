@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';  
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -16,15 +16,15 @@ import {
   Download
 } from 'lucide-react';
 
- 
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API;
 
- 
+
 interface Ruta {
   id: string;
   origen: string;
   destino: string;
-  duracion: string;  
+  duracion: string;
   distance: number;
 }
 
@@ -32,30 +32,30 @@ interface Conductor {
   id: string;
   name: string;
   lastName: string;
-   
+
 }
 
 interface Bus {
   id: string;
-  placa: string;  
-  modelo: string;  
+  placa: string;
+  modelo: string;
   capacidad: number;
-  estado: string;  
+  estado: string;
 }
 
- 
+
 interface CrearViajeDTO {
   busId: string;
   userId: string;
   rutaId: string;
-  fechaSalida: string;  
-  horaSalida: string;  
-  fechaLlegada: string;  
-  horaLLegada: string;  
+  fechaSalida: string;
+  horaSalida: string;
+  fechaLlegada: string;
+  horaLLegada: string;
   precio: number;
 }
 
- 
+
 interface ViajeRespuestaDTO {
   id: string;
   origen: string;
@@ -68,11 +68,11 @@ interface ViajeRespuestaDTO {
   userId: string;
   nombreChofer: string;
   apellidoChofer: string;
-  estado: 'PROGRAMADO' | 'EN_CURSO' | 'COMPLETADO';  
+  estado: 'PROGRAMADO' | 'EN_CURSO' | 'COMPLETADO';
   precio: number;
 }
 
- 
+
 interface Viaje {
   id: string;
   salida: string;
@@ -83,9 +83,9 @@ interface Viaje {
   origen: string;
   destino: string;
   conductor: string;
-  pasajeros: number;  
+  pasajeros: number;
   capacidad: number;
-  estado: 'programado' | 'en_curso' | 'completado';  
+  estado: 'programado' | 'en_curso' | 'completado';
 }
 
 
@@ -94,18 +94,39 @@ const ViajesAdministration = () => {
   const [fechaLlegada, setFechaLlegada] = useState('');
   const [horaSalida, setHoraSalida] = useState('');
   const [horaLlegada, setHoraLlegada] = useState('');
-  const [precio, setPrecio] = useState<number | ''>('');  
+  const [precio, setPrecio] = useState<number | ''>('');
   const [rutaSeleccionada, setRutaSeleccionada] = useState('');
   const [conductorSeleccionado, setConductorSeleccionado] = useState('');
   const [busSeleccionado, setBusSeleccionado] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este viaje?')) {
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/viajes/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al eliminar el viaje');
+      }
+      alert('Viaje eliminado exitosamente!');
+      await fetchViajes();
+    } catch (error: any) {
+      console.error('Error al eliminar el viaje:', error);
+      alert(`Error al eliminar el viaje: ${error.message || 'Ocurrió un error inesperado.'}`);
+    }
+  };
 
-   
   const [viajes, setViajes] = useState<Viaje[]>([]);
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [conductores, setConductores] = useState<Conductor[]>([]);
   const [buses, setBuses] = useState<Bus[]>([]);
-   
+
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'programado': return 'bg-blue-100 text-blue-800';
@@ -118,16 +139,16 @@ const ViajesAdministration = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-         
+
         const busesRes = await fetch(`${API_BASE_URL}/bus`);
         if (!busesRes.ok) throw new Error('Error al cargar buses');
         const busesData: Bus[] = await busesRes.json();
         setBuses(busesData);
 
-         
+
         await fetchViajes();
 
-         
+
         const [rutasRes, choferesRes] = await Promise.all([
           fetch(`${API_BASE_URL}/rutas`),
           fetch(`${API_BASE_URL}/users/choferes`)
@@ -156,7 +177,7 @@ const ViajesAdministration = () => {
       case 'PROGRAMADO': return 'programado';
       case 'EN_CURSO': return 'en_curso';
       case 'COMPLETADO': return 'completado';
-      default: return 'programado'; 
+      default: return 'programado';
     }
   };
   const fetchViajes = async () => {
@@ -165,7 +186,7 @@ const ViajesAdministration = () => {
       if (!response.ok) throw new Error('Error al cargar viajes');
       const data: ViajeRespuestaDTO[] = await response.json();
 
-       
+
       if (buses.length === 0) {
         const busesRes = await fetch(`${API_BASE_URL}/bus`);
         if (!busesRes.ok) throw new Error('Error al cargar buses');
@@ -174,7 +195,7 @@ const ViajesAdministration = () => {
       }
 
       const transformedViajes: Viaje[] = data.map(v => {
-         
+
         const busInfo = buses.find(b => b.id === v.busId) ||
           (buses.length > 0 ? buses.find(b => b.id === v.busId) : null);
 
@@ -204,7 +225,7 @@ const ViajesAdministration = () => {
   };
 
   const handleSubmit = async () => {
-     
+
     if (!fechaSalida || !horaSalida || !fechaLlegada || !horaLlegada || !rutaSeleccionada || !conductorSeleccionado || !busSeleccionado || precio === '') {
       alert('Por favor, completa todos los campos.');
       return;
@@ -226,9 +247,9 @@ const ViajesAdministration = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-           
-           
-           
+
+
+
         },
         body: JSON.stringify(newViaje),
       });
@@ -242,10 +263,10 @@ const ViajesAdministration = () => {
       alert('Viaje creado exitosamente!');
       console.log('Viaje creado:', createdViaje);
 
-       
+
       await fetchViajes();
 
-       
+
       setFechaSalida('');
       setFechaLlegada('');
       setHoraSalida('');
@@ -261,7 +282,7 @@ const ViajesAdministration = () => {
     }
   };
 
-   
+
 
 
   return (
@@ -537,7 +558,10 @@ const ViajesAdministration = () => {
                       <button className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
                         <Edit3 className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button
+                        onClick={() => handleDelete(viaje.id)} // <--- Aquí se añade el onClick
+                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
