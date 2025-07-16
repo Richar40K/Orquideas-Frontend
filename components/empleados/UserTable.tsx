@@ -21,13 +21,6 @@ export const EmpleadosTable = ({
 }: EmpleadosTableProps) => {
    
    
-   
-
-   
-   
-
-   
-   
   const handleStatusChangeLocal = async (id: string, newStatus: Status) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/users/empleados/${id}`, {

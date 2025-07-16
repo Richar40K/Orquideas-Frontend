@@ -3,6 +3,8 @@
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Check, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import axios from "axios";
+import { getUserFromToken } from "@/utils/getUserFromToken";
 
 interface Asiento {
   numero: number;
@@ -10,7 +12,7 @@ interface Asiento {
 }
 
 interface Viaje {
-  id: string;
+  id: string; // ID del viaje como string
   origen: string;
   destino: string;
   fechaSalida: string;
@@ -29,6 +31,7 @@ export default function DetalleViajePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [asientoSeleccionado, setAsientoSeleccionado] = useState<number | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +64,48 @@ export default function DetalleViajePage() {
 
     fetchData();
   }, [params.id]);
+
+  const handlePayment = async () => {
+    if (!asientoSeleccionado || !viaje) {
+      setPaymentError("Por favor, selecciona un asiento.");
+      return;
+    }
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API;
+      const username = getUserFromToken();
+      if (!username) {
+        setPaymentError("No se encontró el usuario.");
+        return;
+      }
+
+      // Obtener el userId usando el username
+      const userResponse = await axios.get(`${apiUrl}/users/username/${username}`);
+      const userId = userResponse.data.id;
+
+      // Crear el objeto de pago
+      const paymentData = {
+        userId: userId,
+        viajeId: parseInt(viaje.id), // Convertir string a number
+        asiento: asientoSeleccionado
+      };
+
+      // Enviar la solicitud de pago
+      const paymentResponse = await axios.post(`${apiUrl}/pagos/viaje`, paymentData);
+      
+      if (paymentResponse.data.mpInitPoint) {
+        // Abrir nueva pestaña con MercadoPago
+        window.location.href = paymentResponse.data.mpInitPoint;
+        
+        // Recargar la página de encomiendas
+        window.location.href = '/cliente/viajes';
+
+      }
+
+    } catch (e: any) {
+      setPaymentError(e.message || "Ocurrió un error al intentar procesar el pago.");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -184,17 +229,13 @@ export default function DetalleViajePage() {
               {duracion}
             </div>
           </div>
+          {paymentError && (
+            <div className="text-red-600 text-sm mt-4">{paymentError}</div>
+          )}
           <button
             disabled={!asientoSeleccionado}
             className="w-full mt-8 bg-green-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-green-700 transition disabled:bg-gray-300"
-            onClick={() => {
-              if (asientoSeleccionado) {
-                  
-                  
-                alert(`Reserva del asiento ${asientoSeleccionado} confirmada. Redirigiendo a pago...`);
-                  
-              }
-            }}
+            onClick={handlePayment}
           >
             {asientoSeleccionado ? "Pagar y reservar" : "Selecciona un asiento"}
           </button>
