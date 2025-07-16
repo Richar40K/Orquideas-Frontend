@@ -13,8 +13,10 @@ export interface Empleado {
   dni: string;
   nameEmergency: string;
   phoneEmergency: string;
+  admin: boolean
 }
 
 export type Department = Empleado['department'];
 export type Status = Empleado['status'];
 export type Position=Empleado['position'];
+

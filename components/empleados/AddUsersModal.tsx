@@ -1,6 +1,6 @@
 import { X, User, Mail, Phone, Home, Briefcase, DollarSign, HeartHandshake } from 'lucide-react';
 import { useState } from 'react';
-import { Empleado } from './types'; 
+import { Empleado } from './types';
 
 interface EmpleadoForm {
   name: string;
@@ -9,31 +9,32 @@ interface EmpleadoForm {
   dni: string;
   direccion: string;
   email: string;
-  cellPhone: string; 
+  cellPhone: string;
   puesto: string;
-  departamento: string; 
-  salario: number; 
+  departamento: string;
+  salario: number;
   nameEmergency: string;
   phoneEmergency: string;
+  admin: boolean
 }
 
 
 interface BackendUserResponse {
-  id: number; 
+  id: number;
   name: string;
   secondName?: string;
   lastName: string;
   dni: string;
-  codigo: string; 
+  codigo: string;
   direccion?: string;
   nameEmergency?: string;
   phoneEmergency?: string;
   email: string;
-  cellPhone: string; 
-  puesto: string; 
-  departamento: string; 
-  salario: number; 
-  estado: string; 
+  cellPhone: string;
+  puesto: string;
+  departamento: string;
+  salario: number;
+  estado: string;
   username: string;
   enabled: boolean;
   admin: boolean;
@@ -56,18 +57,28 @@ export const AddEmpleadoModal = ({ isOpen, onClose, onSave }: AddEmpleadoModalPr
     direccion: '',
     email: '',
     cellPhone: '',
-    puesto: 'GERENTE_GENERAL', 
+    puesto: 'GERENTE_GENERAL',
     departamento: 'ADMINISTRACION',
     salario: 0,
     nameEmergency: '',
-    phoneEmergency: ''
+    phoneEmergency: '',
+    admin: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+
+    // Manejar el campo admin como booleano
+    if (name === 'admin') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === 'true'
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: (name === 'salario') ? Number(value) : value
@@ -92,7 +103,8 @@ export const AddEmpleadoModal = ({ isOpen, onClose, onSave }: AddEmpleadoModalPr
         departamento: formData.departamento,
         salario: formData.salario,
         nameEmergency: formData.nameEmergency,
-        phoneEmergency: formData.phoneEmergency
+        phoneEmergency: formData.phoneEmergency,
+        admin: formData.admin
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/users`, {
@@ -108,33 +120,34 @@ export const AddEmpleadoModal = ({ isOpen, onClose, onSave }: AddEmpleadoModalPr
         throw new Error(errorData.message || 'Error al guardar el usuario');
       }
 
-      const backendData: BackendUserResponse = await response.json(); 
+      const backendData: BackendUserResponse = await response.json();
 
       const mappedEmpleado: Empleado = {
-        id: String(backendData.id), 
+        id: String(backendData.id),
         employeeCode: backendData.codigo,
         fullname: `${backendData.name || ''} ${backendData.secondName || ''} ${backendData.lastName || ''}`.trim(),
         email: backendData.email,
-        phone: backendData.cellPhone,  
-        position: backendData.puesto as Empleado['position'],  
-        department: backendData.departamento as Empleado['department'],  
-        salary: backendData.salario,  
-         
-        hireDate: new Date().toISOString().split('T')[0],  
-        status: backendData.estado as Empleado['status'],  
-        address: backendData.direccion || '',  
+        phone: backendData.cellPhone,
+        position: backendData.puesto as Empleado['position'],
+        department: backendData.departamento as Empleado['department'],
+        salary: backendData.salario,
+
+        hireDate: new Date().toISOString().split('T')[0],
+        status: backendData.estado as Empleado['status'],
+        address: backendData.direccion || '',
         dni: backendData.dni,
         nameEmergency: backendData.nameEmergency || '',
         phoneEmergency: backendData.phoneEmergency || '',
+        admin: backendData.admin,
       };
 
-      onSave(mappedEmpleado);  
-      onClose();  
-       
+      onSave(mappedEmpleado);
+      onClose();
+
       setFormData({
         name: '', secondName: '', lastName: '', dni: '', direccion: '',
         email: '', cellPhone: '', puesto: 'GERENTE_GENERAL', departamento: 'ADMINISTRACION',
-        salario: 0, nameEmergency: '', phoneEmergency: ''
+        salario: 0, nameEmergency: '', phoneEmergency: '', admin: false,
       });
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al guardar el usuario');
@@ -278,6 +291,7 @@ export const AddEmpleadoModal = ({ isOpen, onClose, onSave }: AddEmpleadoModalPr
                     />
                   </div>
                 </div>
+
               </div>
 
               {/* Información Laboral y Contacto de Emergencia */}
@@ -379,6 +393,25 @@ export const AddEmpleadoModal = ({ isOpen, onClose, onSave }: AddEmpleadoModalPr
                 </div>
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+              <div className="relative">
+                <Briefcase className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
+                <select
+                  name="admin"
+                  value={String(formData.admin)}  // Convertir booleano a string
+                  onChange={handleChange}
+                  className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  disabled={isSubmitting}
+                >
+                  <option value="false">No Administrador</option>
+                  <option value="true">Administrador</option>
+                </select>
+              </div>
+            </div>
+
+
 
             <div className="mt-8 flex justify-end space-x-4">
               <button
