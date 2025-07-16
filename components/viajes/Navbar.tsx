@@ -8,7 +8,8 @@ import { getUserFromToken } from "@/utils/getUserFromToken";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; lastName: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; lastName: string; roles: { id: number; name: string }[] } | null>(null);
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -20,7 +21,7 @@ export default function Navbar() {
         if (!res.ok) throw new Error("Error al obtener usuario");
 
         const data = await res.json();
-        setUser({ name: data.name, lastName: data.lastName });
+        setUser({ name: data.name, lastName: data.lastName, roles: data.roles || [] });
       } catch (err) {
         console.error("No se pudo cargar el usuario", err);
       }
@@ -67,6 +68,17 @@ export default function Navbar() {
                   <Settings className="w-4 h-4" />
                   Configuración
                 </Link>
+                {user &&
+                  user.roles.some(r => r.name === "ROLE_USER") &&
+                  user.roles.some(r => r.name === "ROLE_ADMIN") && (
+                    <Link
+                      href="/autenticacion/roles"
+                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 transition"
+                    >
+                      <User className="w-4 h-4" />
+                      Volver a admin
+                    </Link>
+                  )}
               </div>
             )}
           </div>
