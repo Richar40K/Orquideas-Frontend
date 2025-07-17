@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { getUserFromToken } from '@/utils/getUserFromToken'; // Asegúrate de tener esta utilidad
+import Link from 'next/link';
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -98,14 +99,14 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, activeSection }) => {
             <Bell className="w-5 h-5 text-slate-600" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
           </button>
-          <div className="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+          <Link href="/dashboard/configuracion" className="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg"></div>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-slate-800">{username}</p>
               <p className="text-xs text-slate-500">{cargo}</p>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400" />
-          </div>
+          </Link>
         </div>
       </div>
     </header>
