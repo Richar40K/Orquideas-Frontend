@@ -9,6 +9,7 @@ import axios from 'axios';
 import { getUserFromToken } from '@/utils/getUserFromToken'; // Asegúrate de tener esta utilidad
 import Link from 'next/link';
 
+
 interface NavbarProps {
   onMenuClick: () => void;
   activeSection: string;
@@ -27,16 +28,16 @@ const MENU_ITEMS = [
 
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick, activeSection }) => {
   const [username, setUsername] = useState<string>('');
-  const [cargo, setCargo] = useState<string>(''); // Agregar estado para el cargo
+  const [cargo, setCargo] = useState<string>('');    
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchUser  = async (): Promise<void> => { // Definir el tipo de la función
+    const fetchUser  = async (): Promise<void> => {    
       try {
         const usernameFromToken = getUserFromToken();
         if (!usernameFromToken) {
           setUsername('Usuario');
-          setCargo('Cargo'); // Valor por defecto
+          setCargo('Cargo');    
           return;
         }
 
@@ -44,11 +45,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, activeSection }) => {
           `${process.env.NEXT_PUBLIC_API}/users/username/${usernameFromToken}`
         );
         setUsername(response.data.username || 'Usuario');
-        setCargo(response.data.cargo || 'Cargo'); // Asumir que el cargo está en la respuesta
+        setCargo(response.data.cargo || 'Cargo');    
       } catch (error) {
         console.error("Error fetching user:", error);
         setUsername('Usuario');
-        setCargo('Cargo'); // Valor por defecto
+        setCargo('Cargo');    
       } finally {
         setLoading(false);
       }
@@ -103,7 +104,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, activeSection }) => {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg"></div>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-slate-800">{username}</p>
-              <p className="text-xs text-slate-500">{cargo}</p>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400" />
           </Link>

@@ -123,11 +123,11 @@ function MisViajes() {
       if (!username) return;
 
       try {
-        // Obtener el userId desde el backend usando el username
+           
         const userRes = await axios.get(`${process.env.NEXT_PUBLIC_API}/users/username/${username}`);
         const userId = userRes.data.id;
 
-        // Llamar al endpoint de pagos aprobados por usuario
+           
         const pagosRes = await axios.get(`${process.env.NEXT_PUBLIC_API}/pagos/viaje/aprobados/${userId}`);
         setViajes(pagosRes.data);
       } catch (err) {
@@ -469,21 +469,6 @@ function ConfigForm({ nombre, email, cellPhone, userId }: {
           className="px-4 py-2 md:px-6 md:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm md:text-base font-medium"
         >
           Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all font-medium shadow disabled:opacity-70"
-        >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Guardando...
-            </span>
-          ) : "Guardar Cambios"}
         </button>
       </div>
     </form>

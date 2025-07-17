@@ -86,7 +86,7 @@ const EmpleadosPage = () => {
 
 
 
-  const handleStatusChange = (empleadoId: string, newStatus: Status) => { // Cambia newStatus a tipo Status
+  const handleStatusChange = (empleadoId: string, newStatus: Status) => {    
     setEmpleados(prev => prev.map(emp =>
       emp.id === empleadoId ? { ...emp, status: newStatus } : emp
     ));

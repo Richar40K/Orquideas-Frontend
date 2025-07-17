@@ -40,7 +40,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import axios, { AxiosError } from 'axios';
-// Asume que esta utilidad existe y devuelve el username del token
+  
 import { getUserFromToken } from '@/utils/getUserFromToken';
 
 interface Tab {
@@ -84,39 +84,39 @@ const ConfigurationDashboard = () => {
   const [language, setLanguage] = useState<string>('es');
   const [timezone, setTimezone] = useState<string>('America/Lima');
 
-  // --- Nuevos estados para Perfil y Seguridad ---
-  const [userData, setUserData] = useState<any>(null); // Almacena los datos completos del usuario obtenidos del backend
+    
+  const [userData, setUserData] = useState<any>(null);   
   const [profileForm, setProfileForm] = useState({
     name: '',
-    secondName: '', // Añadido para secondName
+    secondName: '',   
     lastName: '',
     email: '',
     cellPhone: '',
-    username: '', // No editable, pero se muestra
-    estado: '', // No editable, pero se muestra
-    puesto: '', // Solo para mostrar, no se enviará en el PUT
-    dni: '', // Añadido para dni, no editable
-    codigo: '', // Añadido para codigo, no editable
-    direccion: '', // Añadido para direccion
-    nameEmergency: '', // Añadido para nameEmergency
-    phoneEmergency: '', // Añadido para phoneEmergency
-    departamento: '', // Añadido para departamento
-    salario: 0, // Añadido para salario
+    username: '',   
+    estado: '',   
+    puesto: '',   
+    dni: '',   
+    codigo: '',   
+    direccion: '',   
+    nameEmergency: '',   
+    phoneEmergency: '',   
+    departamento: '',   
+    salario: 0,   
   });
   const [securityForm, setSecurityForm] = useState({
-    currentPasswordDisplay: '••••••••', // Solo para mostrar, no editable
+    currentPasswordDisplay: '••••••••',   
     newPassword: '',
     confirmNewPassword: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  // --- Fin Nuevos estados ---
+    
 
-  // --- useEffect para cargar datos del usuario ---
+    
   useEffect(() => {
     const fetchUserData = async () => {
-      const usernameFromToken = getUserFromToken(); // Obtener username del token
+      const usernameFromToken = getUserFromToken();   
       if (!usernameFromToken) {
         setError("No se pudo obtener el nombre de usuario del token.");
         return;
@@ -124,26 +124,26 @@ const ConfigurationDashboard = () => {
 
       try {
         setLoading(true);
-        // Usamos el endpoint /username/{username} para obtener los datos del usuario
+          
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API}/users/username/${usernameFromToken}`);
         const user = response.data;
-        setUserData(user); // Guardamos los datos completos del usuario
+        setUserData(user);   
         setProfileForm({
           name: user.name || '',
-          secondName: user.secondName || '', // Cargar secondName
+          secondName: user.secondName || '',   
           lastName: user.lastName || '',
           email: user.email || '',
           cellPhone: user.cellPhone || '',
           username: user.username || '',
           estado: user.estado || '',
           puesto: user.puesto || '',
-          dni: user.dni || '', // Cargar dni
-          codigo: user.codigo || '', // Cargar codigo
-          direccion: user.direccion || '', // Cargar direccion
-          nameEmergency: user.nameEmergency || '', // Cargar nameEmergency
-          phoneEmergency: user.phoneEmergency || '', // Cargar phoneEmergency
-          departamento: user.departamento || '', // Cargar departamento
-          salario: user.salario || 0, // Cargar salario
+          dni: user.dni || '',   
+          codigo: user.codigo || '',   
+          direccion: user.direccion || '',   
+          nameEmergency: user.nameEmergency || '',   
+          phoneEmergency: user.phoneEmergency || '',   
+          departamento: user.departamento || '',   
+          salario: user.salario || 0,   
         });
         setLoading(false);
       } catch (err: unknown) {
@@ -159,7 +159,7 @@ const ConfigurationDashboard = () => {
 
     fetchUserData();
   }, []);
-  // --- Fin useEffect ---
+    
 
   const tabs: Tab[] = [
     { id: 'perfil', label: 'Perfil', icon: User, color: 'text-blue-500' },
@@ -171,7 +171,7 @@ const ConfigurationDashboard = () => {
     { id: 'backup', label: 'Respaldo', icon: Database, color: 'text-indigo-500' }
   ];
 
-  // --- Manejadores de cambio para los formularios ---
+    
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileForm(prev => ({ ...prev, [name]: value }));
@@ -181,9 +181,9 @@ const ConfigurationDashboard = () => {
     const { name, value } = e.target;
     setSecurityForm(prev => ({ ...prev, [name]: value }));
   };
-  // --- Fin Manejadores de cambio ---
+    
 
-  // --- Función para guardar cambios ---
+    
   const handleSaveChanges = async () => {
     setError(null);
     setSuccess(null);
@@ -195,14 +195,14 @@ const ConfigurationDashboard = () => {
       return;
     }
 
-    // Validar contraseñas si se están cambiando
+      
     if (securityForm.newPassword || securityForm.confirmNewPassword) {
       if (securityForm.newPassword !== securityForm.confirmNewPassword) {
         setError("Las nuevas contraseñas no coinciden.");
         setLoading(false);
         return;
       }
-      if (securityForm.newPassword.length < 8) { // Ejemplo de validación de longitud
+      if (securityForm.newPassword.length < 8) {   
         setError("La nueva contraseña debe tener al menos 8 caracteres.");
         setLoading(false);
         return;
@@ -210,48 +210,48 @@ const ConfigurationDashboard = () => {
     }
 
     try {
-      // Construir el objeto updateData con los campos que se pueden modificar
-      // y los que deben mantenerse con su valor original si no se modifican.
-      // Es crucial enviar todos los campos requeridos por el PUT del backend,
-      // incluso si no se modifican en el formulario, para evitar que se sobrescriban a null.
+        
+        
+        
+        
       const updateData: any = {
-        id: userData.id, // El ID es necesario para el PUT
+        id: userData.id,   
         name: profileForm.name,
-        secondName: profileForm.secondName, // Incluir secondName
+        secondName: profileForm.secondName,   
         lastName: profileForm.lastName,
-        dni: userData.dni, // DNI no es editable en el formulario, se envía el original
-        codigo: userData.codigo, // Código no es editable, se envía el original
-        direccion: profileForm.direccion, // Incluir direccion
-        nameEmergency: profileForm.nameEmergency, // Incluir nameEmergency
-        phoneEmergency: profileForm.phoneEmergency, // Incluir phoneEmergency
+        dni: userData.dni,   
+        codigo: userData.codigo,   
+        direccion: profileForm.direccion,   
+        nameEmergency: profileForm.nameEmergency,   
+        phoneEmergency: profileForm.phoneEmergency,   
         email: profileForm.email,
         cellPhone: profileForm.cellPhone,
-        puesto: userData.puesto, // Puesto no es editable, se envía el original
-        departamento: userData.departamento, // Departamento no es editable, se envía el original
-        salario: userData.salario, // Salario no es editable, se envía el original
-        estado: userData.estado, // Estado no es editable, se envía el original
-        username: profileForm.username, // Username puede ser editable o no, se envía el valor del formulario
-        password: userData.password, // Se envía la contraseña original por defecto
-        enabled: userData.enabled, // Se envía el estado enabled original
-        admin: userData.admin, // <--- ¡AQUÍ ESTÁ EL CAMBIO CLAVE! Se envía el estado admin original
-        roles: userData.roles, // Se envían los roles originales
+        puesto: userData.puesto,   
+        departamento: userData.departamento,   
+        salario: userData.salario,   
+        estado: userData.estado,   
+        username: profileForm.username,   
+        password: userData.password,   
+        enabled: userData.enabled,   
+        admin: userData.admin,   
+        roles: userData.roles,   
       };
 
-      // Si se proporcionó una nueva contraseña, sobrescribir la contraseña en updateData
+        
       if (securityForm.newPassword) {
         updateData.password = securityForm.newPassword;
       }
 
-      // Realizar la solicitud PUT al endpoint de actualización de usuarios
+        
       await axios.put(`${process.env.NEXT_PUBLIC_API}/users/${userData.id}`, updateData);
       setSuccess("Cambios guardados exitosamente.");
-      // Limpiar campos de contraseña después de un guardado exitoso
+        
       setSecurityForm(prev => ({ ...prev, newPassword: '', confirmNewPassword: '' }));
 
-      // Opcional: Volver a cargar los datos del usuario para reflejar los cambios
-      // Esto es útil si el backend devuelve el usuario actualizado o si hay campos calculados
-      // const response = await axios.get(`${process.env.NEXT_PUBLIC_API}/users/username/${profileForm.username}`);
-      // setUserData(response.data);
+        
+        
+        
+        
 
     } catch (err: unknown) {
       console.error("Error al guardar cambios:", err);
@@ -264,7 +264,7 @@ const ConfigurationDashboard = () => {
       setLoading(false);
     }
   };
-  // --- Fin Función para guardar cambios ---
+    
 
   const renderProfileTab = () => (
     <div className="space-y-6">
@@ -297,8 +297,8 @@ const ConfigurationDashboard = () => {
               value={profileForm.username}
               onChange={handleProfileChange}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-            // Si el username no debe ser editable, añadir readOnly aquí
-            // readOnly
+              
+              
             />
           </div>
           <div>
@@ -507,12 +507,12 @@ const ConfigurationDashboard = () => {
             <label className="block text-sm font-medium text-slate-700 mb-2">Contraseña Actual</label>
             <div className="relative">
               <input
-                type="password" // Siempre tipo password para ocultar
-                value={securityForm.currentPasswordDisplay} // Muestra solo los puntos
+                type="password"   
+                value={securityForm.currentPasswordDisplay}   
                 className="w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 bg-slate-100 cursor-not-allowed"
-                readOnly // No editable
+                readOnly   
               />
-              {/* El botón de mostrar/ocultar no tiene sentido si el campo es readOnly y siempre muestra puntos */}
+              { }
               {/* <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -810,7 +810,7 @@ const ConfigurationDashboard = () => {
                   const file = e.target.files?.[0];
                   if (file) {
                     console.log('Archivo seleccionado:', file.name);
-                    // Aquí irías tu lógica para procesar el archivo
+                      
                   }
                 }}
               />
@@ -892,7 +892,7 @@ const ConfigurationDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      {/* Header */}
+      { }
       <div className="mb-8">
         <div className="flex items-center space-x-3 mb-2">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -905,7 +905,7 @@ const ConfigurationDashboard = () => {
         </div>
       </div>
 
-      {/* Mensajes de estado */}
+      { }
       {loading && (
         <div className="mb-4 p-4 bg-blue-100 text-blue-700 rounded-lg flex items-center space-x-2">
           <RefreshCw className="w-5 h-5 animate-spin" />
@@ -926,7 +926,7 @@ const ConfigurationDashboard = () => {
       )}
 
       <div className="space-y-6">
-        {/* Horizontal Tabs */}
+        { }
         <div className="bg-white/70 backdrop-blur-lg rounded-2xl p-2 border border-slate-200/60">
           <nav className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
@@ -951,35 +951,16 @@ const ConfigurationDashboard = () => {
           </nav>
         </div>
 
-        {/* Main Content */}
+        { }
         <div className="w-full">
           {renderTabContent()}
 
-          {/* Save Button */}
+          { }
           <div className="mt-8 flex justify-end">
-            <button
-              onClick={handleSaveChanges}
-              disabled={loading} // Deshabilita el botón mientras carga
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <RefreshCw className="w-5 h-5 animate-spin" />
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              <span className="font-medium">{loading ? 'Guardando...' : 'Guardar Cambios'}</span>
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Success Toast (Hidden by default) - Se reemplaza por el mensaje de éxito dinámico */}
-      {/* <div className="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg hidden">
-        <div className="flex items-center space-x-3">
-          <CheckCircle className="w-5 h-5" />
-          <span className="font-medium">Configuración guardada exitosamente</span>
-        </div>
-      </div> */}
     </div>
   );
 };
