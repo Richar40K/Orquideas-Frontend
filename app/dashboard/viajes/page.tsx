@@ -293,16 +293,7 @@ const ViajesAdministration = () => {
           <h1 className="text-3xl font-bold text-slate-800">Administración de Viajes</h1>
           <p className="text-slate-600 mt-1">Gestiona y programa todos los viajes de tu flota</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors">
-            <Download className="w-4 h-4" />
-            Exportar
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all">
-            <Plus className="w-4 h-4" />
-            Nuevo Viaje
-          </button>
-        </div>
+        
       </div>
 
       {/* Form Card */}
@@ -552,12 +543,7 @@ const ViajesAdministration = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                        <Edit3 className="w-4 h-4" />
-                      </button>
+                      
                       <button
                         onClick={() => handleDelete(viaje.id)} // <--- Aquí se añade el onClick
                         className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

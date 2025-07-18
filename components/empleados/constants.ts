@@ -1,4 +1,3 @@
-
 import {Empleado } from './types';
 
 export const departmentConfig = {
@@ -76,5 +75,5 @@ export const positionConfig = {
   }
 } as const;
 export const sampleEmpleados: Empleado[] = [
-   
+
 ];
