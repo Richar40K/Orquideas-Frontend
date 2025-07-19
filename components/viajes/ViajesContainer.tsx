@@ -77,7 +77,7 @@ export default function ViajesContainer() {
                 destino: viaje.destino,
                 duracion: duracion,
                 precio: viaje.precio,
-                asientosDisponibles: 0,  
+                asientosDisponibles: 0, 
             };
         });
     };

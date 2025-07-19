@@ -41,10 +41,10 @@ export default function RegistrarEncomienda() {
 
   const precios: Record<PaqueteTipo, number> = {
     SOBRE_A4: 10,
-    CAJA_S: 15,
-    CAJA_M: 20,
-    CAJA_XX: 25,
-    CAJA_XXL: 30,
+    CAJA_S: 20,
+    CAJA_M: 27,
+    CAJA_XX: 34,
+    CAJA_XXL: 40,
   };
 
   // rutasValidasMap ahora será de tipo Record<DynamicCity, DynamicCity[]>

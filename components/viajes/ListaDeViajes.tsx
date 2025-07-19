@@ -63,9 +63,9 @@ export default function ListaDeViajes({ viajesToShow, hasSearched, isLoading, er
               <span className="font-bold text-blue-700 mb-1">
                 Desde: <span className="text-lg text-green-600">S/. {viaje.precio}</span>
               </span>
-              {viaje.asientosDisponibles < 10 && (
+              {/*viaje.asientosDisponibles < 10 && (
                 <span className="text-xs text-orange-500 mb-1">{viaje.asientosDisponibles} asientos disponibles</span>
-              )}
+              )*/}
               <button
                 className="flex items-center gap-2 bg-yellow-400 text-blue-900 font-bold px-4 py-2 rounded-xl hover:bg-yellow-300 shadow transition"
                 onClick={e => {

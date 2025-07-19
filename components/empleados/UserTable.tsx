@@ -1,11 +1,10 @@
- 
 import { Eye, Edit, Trash2, Mail, Phone } from 'lucide-react';
 import { Empleado, Department, Status, Position } from './types';
 import { departmentConfig, statusConfig } from './constants';
- 
+
 
 interface EmpleadosTableProps {
-  empleados: Empleado[];  
+  empleados: Empleado[];
   onViewDetails: (empleado: Empleado) => void;
   onEdit: (empleado: Empleado) => void;
   onDelete: (id: string) => void;
@@ -13,14 +12,14 @@ interface EmpleadosTableProps {
 }
 
 export const EmpleadosTable = ({
-  empleados,  
+  empleados,
   onViewDetails,
   onEdit,
   onDelete,
   onStatusChange
 }: EmpleadosTableProps) => {
-   
-   
+
+
   const handleStatusChangeLocal = async (id: string, newStatus: Status) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/users/empleados/${id}`, {
@@ -28,7 +27,7 @@ export const EmpleadosTable = ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ estado: newStatus }),  
+        body: JSON.stringify({ estado: newStatus }),
       });
 
       if (!response.ok) {
@@ -36,15 +35,15 @@ export const EmpleadosTable = ({
         throw new Error(errorData.message || 'Error al actualizar el estado');
       }
 
-       
+
       onStatusChange(id, newStatus);
     } catch (error) {
       console.error('Error updating status:', error);
-       
+
     }
   };
 
-  const handleDeleteLocal = async (id: string) => {  
+  const handleDeleteLocal = async (id: string) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/users/${id}`, {
         method: 'DELETE',
@@ -58,18 +57,18 @@ export const EmpleadosTable = ({
         throw new Error(errorData.message || 'Error al eliminar el empleado');
       }
 
-       
+
       onDelete(id);
     } catch (error) {
       console.error('Error deleting employee:', error);
-       
+
     }
   };
 
-   
-   
 
-   
+
+
+
   const displayEmpleados = empleados;
 
   return (
@@ -154,17 +153,10 @@ export const EmpleadosTable = ({
                       <div className="text-sm font-medium text-gray-900">S/ {empleado.salary.toLocaleString()}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {/* Cambia el span por un select para permitir la actualización de estado */}
-                      <select
-                        value={empleado.status}
-                        onChange={(e) => handleStatusChangeLocal(empleado.id, e.target.value as Status)}
-                        className={`text-xs px-3 py-1 rounded-full border font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 ${statusConfig[empleado.status.toLowerCase() as keyof typeof statusConfig].color}`}
-                      >
-                        <option value="ACTIVO">✅ Activo</option>
-                        <option value="INACTIVO">❌ Inactivo</option>
-                        <option value="VACACIONES">🏖️ Vacaciones</option>
-                        <option value="LICENCIA">📄 Licencia</option>
-                      </select>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusConfig[empleado.status.toLowerCase() as keyof typeof statusConfig].color}`}>
+                        {statusConfig[empleado.status.toLowerCase() as keyof typeof statusConfig].icon}
+                        {statusConfig[empleado.status.toLowerCase() as keyof typeof statusConfig].label}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
